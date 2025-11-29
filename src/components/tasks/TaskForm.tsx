@@ -230,7 +230,10 @@ export function TaskForm({
           placeholder="Task name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className={cn(errors.name && 'border-destructive')}
+          className={cn(
+            'h-10 sm:h-9 text-base sm:text-sm',
+            errors.name && 'border-destructive'
+          )}
           autoFocus
         />
         {errors.name && (
@@ -244,19 +247,19 @@ export function TaskForm({
           placeholder="Description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="w-full min-h-[80px] rounded-md border border-input bg-transparent px-3 py-2 text-base sm:text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         />
       </div>
 
       {/* List Selection */}
       <div className="flex items-center gap-2">
         <Select value={listId} onValueChange={setListId}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px] h-10 sm:h-9">
             <SelectValue placeholder="Select list" />
           </SelectTrigger>
           <SelectContent>
             {lists.map((list) => (
-              <SelectItem key={list.id} value={list.id}>
+              <SelectItem key={list.id} value={list.id} className="py-2.5 sm:py-1.5">
                 {list.emoji && <span className="mr-2">{list.emoji}</span>}
                 {list.name}
               </SelectItem>
@@ -265,15 +268,18 @@ export function TaskForm({
         </Select>
       </div>
 
-      {/* Date and Time Row */}
-      <div className="flex flex-wrap gap-2">
+      {/* Date and Time Row - Stack on mobile */}
+      <div className="flex flex-col sm:flex-row gap-2">
         {/* Date Picker */}
         <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
               size="sm"
-              className={cn(!date && 'text-muted-foreground')}
+              className={cn(
+                'justify-start h-10 sm:h-8 text-base sm:text-sm',
+                !date && 'text-muted-foreground'
+              )}
             >
               <CalendarIcon className="h-4 w-4 mr-2" />
               {date ? format(date, 'MMM d, yyyy') : 'Set date'}
@@ -291,7 +297,7 @@ export function TaskForm({
                   variant="ghost"
                   size="sm"
                   onClick={() => setDate(undefined)}
-                  className="w-full"
+                  className="w-full h-10 sm:h-8"
                 >
                   Clear date
                 </Button>
@@ -301,78 +307,84 @@ export function TaskForm({
         </Popover>
 
         {/* Deadline Time */}
-        <div className="flex items-center gap-1">
-          <Clock className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
           <Input
             type="time"
             value={deadlineTime}
             onChange={(e) => setDeadlineTime(e.target.value)}
-            className="w-[120px] h-8"
+            className="flex-1 sm:w-[120px] h-10 sm:h-8 text-base sm:text-sm"
             placeholder="Time"
           />
         </div>
       </div>
 
-      {/* Priority */}
-      <div className="flex items-center gap-2">
-        <Flag className="h-4 w-4 text-muted-foreground" />
-        <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            {PRIORITIES.map((p) => (
-              <SelectItem key={p.value} value={p.value}>
-                <span className={p.color}>{p.label}</span>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Priority and Estimate Row - Stack on mobile */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        {/* Priority */}
+        <div className="flex items-center gap-2 flex-1">
+          <Flag className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={priority} onValueChange={(v) => setPriority(v as Priority)}>
+            <SelectTrigger className="flex-1 sm:w-[140px] h-10 sm:h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {PRIORITIES.map((p) => (
+                <SelectItem key={p.value} value={p.value} className="py-2.5 sm:py-1.5">
+                  <span className={p.color}>{p.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* Estimate */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-muted-foreground" />
+        {/* Estimate */}
+        <div className="flex items-center gap-2 flex-1">
+          <Clock className="h-4 w-4 text-muted-foreground shrink-0" />
           <Input
             placeholder="Estimate (HH:mm)"
             value={estimate}
             onChange={(e) => setEstimate(e.target.value)}
-            className={cn('w-[140px]', errors.estimate && 'border-destructive')}
+            className={cn(
+              'flex-1 sm:w-[140px] h-10 sm:h-9 text-base sm:text-sm',
+              errors.estimate && 'border-destructive'
+            )}
           />
         </div>
-        {errors.estimate && (
-          <p className="text-xs text-destructive">{errors.estimate}</p>
-        )}
       </div>
+      {errors.estimate && (
+        <p className="text-xs text-destructive -mt-2">{errors.estimate}</p>
+      )}
 
       {/* Recurrence */}
-      <div className="flex items-center gap-2">
-        <Repeat className="h-4 w-4 text-muted-foreground" />
-        <Select
-          value={recurrence?.type ?? 'none'}
-          onValueChange={(v) => {
-            if (v === 'none') {
-              setRecurrence(undefined);
-            } else {
-              setRecurrence({ type: v as RecurrenceType });
-            }
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="No repeat" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none">No repeat</SelectItem>
-            {RECURRENCE_TYPES.map((r) => (
-              <SelectItem key={r.value} value={r.value}>
-                {r.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="flex items-center gap-2 flex-1">
+          <Repeat className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select
+            value={recurrence?.type ?? 'none'}
+            onValueChange={(v) => {
+              if (v === 'none') {
+                setRecurrence(undefined);
+              } else {
+                setRecurrence({ type: v as RecurrenceType });
+              }
+            }}
+          >
+            <SelectTrigger className="flex-1 sm:w-[180px] h-10 sm:h-9">
+              <SelectValue placeholder="No repeat" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none" className="py-2.5 sm:py-1.5">No repeat</SelectItem>
+              {RECURRENCE_TYPES.map((r) => (
+                <SelectItem key={r.value} value={r.value} className="py-2.5 sm:py-1.5">
+                  {r.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
         {recurrence && (
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-muted-foreground ml-6 sm:ml-0">
             {formatRecurrencePattern(recurrence)}
           </span>
         )}
@@ -390,7 +402,11 @@ export function TaskForm({
               <Badge
                 key={label.id}
                 variant={selectedLabelIds.includes(label.id) ? 'default' : 'outline'}
-                className="cursor-pointer"
+                className={cn(
+                  'cursor-pointer',
+                  // Larger touch targets on mobile
+                  'py-1.5 px-3 sm:py-1 sm:px-2.5 text-sm sm:text-xs'
+                )}
                 onClick={() => toggleLabel(label.id)}
               >
                 {label.icon && <span className="mr-1">{label.icon}</span>}
@@ -408,15 +424,16 @@ export function TaskForm({
         </div>
         
         {subtasks.length > 0 && (
-          <div className="space-y-1">
+          <div className="space-y-2 sm:space-y-1">
             {subtasks.map((subtask) => (
-              <div key={subtask.id} className="flex items-center gap-2">
+              <div key={subtask.id} className="flex items-center gap-2 min-h-[44px] sm:min-h-0">
                 <Checkbox
                   checked={subtask.completed}
                   onCheckedChange={() => handleToggleSubtask(subtask.id)}
+                  className="h-5 w-5 sm:h-4 sm:w-4"
                 />
                 <span className={cn(
-                  'flex-1 text-sm',
+                  'flex-1 text-base sm:text-sm',
                   subtask.completed && 'line-through text-muted-foreground'
                 )}>
                   {subtask.name}
@@ -425,10 +442,10 @@ export function TaskForm({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-6 w-6"
+                  className="h-8 w-8 sm:h-6 sm:w-6"
                   onClick={() => handleRemoveSubtask(subtask.id)}
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-4 w-4 sm:h-3 sm:w-3" />
                 </Button>
               </div>
             ))}
@@ -446,7 +463,7 @@ export function TaskForm({
                 handleAddSubtask();
               }
             }}
-            className="flex-1"
+            className="flex-1 h-10 sm:h-9 text-base sm:text-sm"
           />
           <Button
             type="button"
@@ -454,6 +471,7 @@ export function TaskForm({
             size="icon"
             onClick={handleAddSubtask}
             disabled={!newSubtaskName.trim()}
+            className="h-10 w-10 sm:h-9 sm:w-9"
           >
             <Plus className="h-4 w-4" />
           </Button>
@@ -470,14 +488,18 @@ export function TaskForm({
         {reminders.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {reminders.map((reminder) => (
-              <Badge key={reminder.id} variant="secondary" className="gap-1">
+              <Badge 
+                key={reminder.id} 
+                variant="secondary" 
+                className="gap-1 py-1.5 px-3 sm:py-1 sm:px-2.5"
+              >
                 {formatReminderOffset(reminder.offsetMinutes)}
                 <button
                   type="button"
                   onClick={() => handleRemoveReminder(reminder.id)}
-                  className="ml-1 hover:text-destructive"
+                  className="ml-1 hover:text-destructive p-0.5"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
                 </button>
               </Badge>
             ))}
@@ -485,14 +507,14 @@ export function TaskForm({
         )}
 
         <Select onValueChange={(v) => handleAddReminder(parseInt(v, 10))}>
-          <SelectTrigger className="w-[200px]">
+          <SelectTrigger className="w-full sm:w-[200px] h-10 sm:h-9">
             <SelectValue placeholder="Add reminder" />
           </SelectTrigger>
           <SelectContent>
             {REMINDER_PRESETS.filter(
               p => !reminders.some(r => r.offsetMinutes === p.value)
             ).map((preset) => (
-              <SelectItem key={preset.value} value={String(preset.value)}>
+              <SelectItem key={preset.value} value={String(preset.value)} className="py-2.5 sm:py-1.5">
                 {preset.label}
               </SelectItem>
             ))}
@@ -500,12 +522,21 @@ export function TaskForm({
         </Select>
       </div>
 
-      {/* Form Actions */}
-      <div className="flex justify-end gap-2 pt-4 border-t">
-        <Button type="button" variant="outline" onClick={onCancel}>
+      {/* Form Actions - Full width buttons on mobile */}
+      <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          className="h-11 sm:h-9 text-base sm:text-sm"
+        >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
+        <Button 
+          type="submit" 
+          disabled={isLoading}
+          className="h-11 sm:h-9 text-base sm:text-sm"
+        >
           {isLoading ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Task'}
         </Button>
       </div>

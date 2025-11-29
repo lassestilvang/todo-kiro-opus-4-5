@@ -204,8 +204,8 @@ function TaskGroup({ group, onTaskClick, onToggleComplete }: TaskGroupProps) {
     : formatGroupDate(group.date);
 
   return (
-    <div className="space-y-2">
-      <h3 className="text-sm font-medium text-muted-foreground px-1">
+    <div className="space-y-2 sm:space-y-2">
+      <h3 className="text-base sm:text-sm font-medium text-muted-foreground px-1">
         {headerText}
       </h3>
       <motion.div
@@ -247,7 +247,11 @@ function CompletedToggle({ showCompleted, onToggle }: CompletedToggleProps) {
         variant="ghost"
         size="sm"
         onClick={onToggle}
-        className="text-muted-foreground hover:text-foreground"
+        className={cn(
+          'text-muted-foreground hover:text-foreground',
+          // Touch-friendly: larger button on mobile
+          'h-10 px-4 sm:h-8 sm:px-3 text-sm'
+        )}
       >
         {showCompleted ? (
           <>

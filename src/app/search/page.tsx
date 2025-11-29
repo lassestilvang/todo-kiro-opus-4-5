@@ -239,12 +239,12 @@ export default function SearchPage(): React.ReactElement {
 
   return (
     <AppLayout title="Search">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="space-y-1">
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Search className="h-6 w-6" />
-            Search Results
+          <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <Search className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
+            <span className="truncate">Search Results</span>
           </h1>
           {query && (
             <p className="text-sm text-muted-foreground">

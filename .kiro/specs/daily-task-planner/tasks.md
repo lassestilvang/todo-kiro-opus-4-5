@@ -378,8 +378,8 @@
     - Fallback for unsupported browsers
     - _Requirements: 21.1, 21.2_
 
-- [-] 27. Responsive Design
-  - [-] 27.1 Implement mobile layout
+- [x] 27. Responsive Design
+  - [x] 27.1 Implement mobile layout
     - Collapsible sidebar
     - Touch-friendly interactions
     - Responsive task forms

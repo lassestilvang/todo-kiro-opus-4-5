@@ -74,6 +74,8 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   onCreateList?: () => void;
   onCreateLabel?: () => void;
+  /** Mobile mode - shows close button instead of collapse */
+  isMobile?: boolean;
 }
 
 interface NavItemProps {
@@ -86,9 +88,11 @@ interface NavItemProps {
   color?: string;
   emoji?: string;
   index?: number;
+  /** Larger touch targets for mobile */
+  isMobile?: boolean;
 }
 
-function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, index = 0 }: NavItemProps) {
+function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, index = 0, isMobile = false }: NavItemProps) {
   return (
     <motion.div
       custom={index}
@@ -101,12 +105,15 @@ function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, 
         className={cn(
           'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
           'hover:bg-accent hover:text-accent-foreground',
+          'active:bg-accent/80', // Touch feedback
           isActive && 'bg-accent text-accent-foreground font-medium',
-          collapsed && 'justify-center px-2'
+          collapsed && 'justify-center px-2',
+          // Mobile: larger touch targets (min 44px height for accessibility)
+          isMobile && 'py-3 min-h-[44px]'
         )}
       >
         {emoji ? (
-          <span className="text-base">{emoji}</span>
+          <span className={cn('text-base', isMobile && 'text-lg')}>{emoji}</span>
         ) : (
           <span className={cn('shrink-0', color && `text-[${color}]`)}>{icon}</span>
         )}
@@ -118,7 +125,7 @@ function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, 
               initial="collapsed"
               animate="expanded"
               exit="collapsed"
-              className="flex-1 truncate"
+              className={cn('flex-1 truncate', isMobile && 'text-base')}
             >
               {label}
             </motion.span>
@@ -180,8 +187,9 @@ function SectionHeader({ title, collapsed, onAdd }: { title: string; collapsed?:
 /**
  * Sidebar Component
  * Animated sidebar with collapsible navigation using Framer Motion.
+ * Supports both desktop (collapsible) and mobile (overlay) modes.
  * 
- * Requirements: 18.1, 18.2, 18.3, 18.4, 21.1
+ * Requirements: 18.1, 18.2, 18.3, 18.4, 20.2, 20.3, 21.1
  */
 export function Sidebar({
   lists,
@@ -191,6 +199,7 @@ export function Sidebar({
   onToggleCollapse,
   onCreateList,
   onCreateLabel,
+  isMobile = false,
 }: SidebarProps) {
   const pathname = usePathname();
 
@@ -201,23 +210,28 @@ export function Sidebar({
     { href: '/all', icon: <ListTodo className="h-4 w-4" />, label: 'All' },
   ];
 
+  // In mobile mode, always show expanded sidebar
+  const isCollapsed = isMobile ? false : collapsed;
+
   return (
     <motion.aside
       initial={false}
       variants={sidebarVariants}
-      animate={collapsed ? 'collapsed' : 'expanded'}
+      animate={isCollapsed ? 'collapsed' : 'expanded'}
       className={cn(
         'flex h-full flex-col border-r bg-sidebar text-sidebar-foreground',
-        'relative overflow-hidden'
+        'relative overflow-hidden',
+        // Mobile-specific styles
+        isMobile && 'w-64 shadow-xl'
       )}
     >
       {/* Header */}
       <div className={cn(
         'flex h-14 items-center border-b px-4',
-        collapsed && 'justify-center px-2'
+        isCollapsed && 'justify-center px-2'
       )}>
         <AnimatePresence mode="wait">
-          {!collapsed && (
+          {!isCollapsed && (
             <motion.h1
               key="title"
               variants={contentVariants}
@@ -232,20 +246,24 @@ export function Sidebar({
         </AnimatePresence>
         {onToggleCollapse && (
           <motion.div
-            animate={{ marginLeft: collapsed ? 0 : 'auto' }}
+            animate={{ marginLeft: isCollapsed ? 0 : 'auto' }}
             transition={{ duration: 0.2 }}
           >
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className={cn(
+                'h-8 w-8',
+                // Larger touch target on mobile
+                isMobile && 'h-10 w-10'
+              )}
               onClick={onToggleCollapse}
             >
               <motion.div
-                animate={{ rotate: collapsed ? 0 : 180 }}
+                animate={{ rotate: isMobile ? 0 : (isCollapsed ? 0 : 180) }}
                 transition={{ duration: 0.2 }}
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className={cn('h-4 w-4', isMobile && 'h-5 w-5')} />
               </motion.div>
             </Button>
           </motion.div>
@@ -253,10 +271,14 @@ export function Sidebar({
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className={cn(
+        'flex-1 overflow-y-auto p-2',
+        // Better touch scrolling on mobile
+        isMobile && 'overscroll-contain'
+      )}>
         {/* Views Section */}
         <div className="space-y-1">
-          <SectionHeader title="Views" collapsed={collapsed} />
+          <SectionHeader title="Views" collapsed={isCollapsed} />
           {views.map((view, index) => (
             <NavItem
               key={view.href}
@@ -264,8 +286,9 @@ export function Sidebar({
               icon={view.icon}
               label={view.label}
               isActive={pathname === view.href}
-              collapsed={collapsed}
+              collapsed={isCollapsed}
               index={index}
+              isMobile={isMobile}
             />
           ))}
         </div>
@@ -285,8 +308,9 @@ export function Sidebar({
                 label="Overdue"
                 badge={overdueCount}
                 isActive={pathname === '/overdue'}
-                collapsed={collapsed}
+                collapsed={isCollapsed}
                 index={0}
+                isMobile={isMobile}
               />
             </motion.div>
           )}
@@ -294,7 +318,7 @@ export function Sidebar({
 
         {/* Lists Section */}
         <div className="mt-6 space-y-1">
-          <SectionHeader title="Lists" collapsed={collapsed} onAdd={onCreateList} />
+          <SectionHeader title="Lists" collapsed={isCollapsed} onAdd={onCreateList} />
           {lists.map((list, index) => (
             <NavItem
               key={list.id}
@@ -302,10 +326,11 @@ export function Sidebar({
               icon={list.isInbox ? <Inbox className="h-4 w-4" /> : <ListTodo className="h-4 w-4" />}
               label={list.name}
               isActive={pathname === `/list/${list.id}`}
-              collapsed={collapsed}
+              collapsed={isCollapsed}
               color={list.color}
               emoji={list.emoji}
               index={index}
+              isMobile={isMobile}
             />
           ))}
         </div>
@@ -319,7 +344,7 @@ export function Sidebar({
               exit={{ opacity: 0 }}
               className="mt-6 space-y-1"
             >
-              <SectionHeader title="Labels" collapsed={collapsed} onAdd={onCreateLabel} />
+              <SectionHeader title="Labels" collapsed={isCollapsed} onAdd={onCreateLabel} />
               {labels.map((label, index) => (
                 <NavItem
                   key={label.id}
@@ -327,8 +352,9 @@ export function Sidebar({
                   icon={label.icon ? <span>{label.icon}</span> : <Tag className="h-4 w-4" />}
                   label={label.name}
                   isActive={pathname === `/label/${label.id}`}
-                  collapsed={collapsed}
+                  collapsed={isCollapsed}
                   index={index}
+                  isMobile={isMobile}
                 />
               ))}
             </motion.div>

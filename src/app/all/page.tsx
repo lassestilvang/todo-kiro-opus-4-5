@@ -274,21 +274,25 @@ export default function AllPage(): React.ReactElement {
 
   return (
     <AppLayout title="All Tasks">
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <ListTodo className="h-6 w-6" />
-              All Tasks
+        <div className="flex items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              <ListTodo className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
+              <span className="truncate">All Tasks</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''} total
             </p>
           </div>
-          <Button onClick={() => setIsFormOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Task
+          <Button 
+            onClick={() => setIsFormOpen(true)} 
+            size="sm"
+            className="h-10 px-4 sm:h-8 sm:px-3 shrink-0"
+          >
+            <Plus className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Add Task</span>
           </Button>
         </div>
 

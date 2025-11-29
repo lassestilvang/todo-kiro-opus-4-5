@@ -102,16 +102,18 @@ export function TaskItem({
       onClick={onClick}
       onKeyDown={handleKeyDown}
       className={cn(
-        'group flex items-start gap-3 rounded-lg border p-3 transition-colors',
-        'hover:bg-accent/50 cursor-pointer',
+        'group flex items-start gap-3 rounded-lg border p-3 sm:p-3 transition-colors',
+        'hover:bg-accent/50 active:bg-accent/70 cursor-pointer',
+        // Touch-friendly: larger padding on mobile
+        'p-4 sm:p-3',
         task.completed && 'opacity-60',
         taskIsOverdue && 'border-destructive/50 bg-destructive/5',
         className
       )}
     >
-      {/* Checkbox */}
+      {/* Checkbox - larger touch target on mobile */}
       <div 
-        className="pt-0.5"
+        className="pt-0.5 -m-2 p-2 sm:m-0 sm:p-0"
         onClick={handleCheckboxClick}
         role="button"
         tabIndex={-1}
@@ -119,7 +121,7 @@ export function TaskItem({
         <Checkbox
           checked={task.completed}
           className={cn(
-            'h-5 w-5',
+            'h-6 w-6 sm:h-5 sm:w-5',
             task.priority === 'high' && !task.completed && 'border-red-500',
             task.priority === 'medium' && !task.completed && 'border-yellow-500',
             task.priority === 'low' && !task.completed && 'border-blue-500'
@@ -128,13 +130,13 @@ export function TaskItem({
       </div>
 
       {/* Content */}
-      <div className="flex-1 min-w-0 space-y-1">
+      <div className="flex-1 min-w-0 space-y-1.5 sm:space-y-1">
         {/* Task name and priority indicator */}
         <div className="flex items-center gap-2">
           {task.priority !== 'none' && (
             <div
               className={cn(
-                'h-2 w-2 rounded-full shrink-0',
+                'h-2.5 w-2.5 sm:h-2 sm:w-2 rounded-full shrink-0',
                 priority.color
               )}
               title={`${priority.label} priority`}
@@ -142,7 +144,7 @@ export function TaskItem({
           )}
           <span
             className={cn(
-              'text-sm font-medium truncate',
+              'text-base sm:text-sm font-medium truncate',
               task.completed && 'line-through text-muted-foreground'
             )}
           >
@@ -151,7 +153,7 @@ export function TaskItem({
         </div>
 
         {/* Meta information row */}
-        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 sm:gap-2 text-sm sm:text-xs text-muted-foreground">
           {/* Due date */}
           {task.date && (
             <span className={cn(
@@ -208,12 +210,12 @@ export function TaskItem({
 
         {/* Labels */}
         {task.labels && task.labels.length > 0 && (
-          <div className="flex flex-wrap gap-1 pt-1">
+          <div className="flex flex-wrap gap-1.5 sm:gap-1 pt-1">
             {task.labels.map((label) => (
               <Badge
                 key={label.id}
                 variant="secondary"
-                className="text-xs px-1.5 py-0"
+                className="text-sm sm:text-xs px-2 py-0.5 sm:px-1.5 sm:py-0"
               >
                 {label.icon && <span className="mr-1">{label.icon}</span>}
                 {label.name}
@@ -226,7 +228,7 @@ export function TaskItem({
       {/* Overdue indicator */}
       {taskIsOverdue && (
         <div className="shrink-0">
-          <Badge variant="destructive" className="text-xs">
+          <Badge variant="destructive" className="text-sm sm:text-xs">
             Overdue
           </Badge>
         </div>

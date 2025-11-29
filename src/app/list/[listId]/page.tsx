@@ -392,41 +392,45 @@ export default function ListDetailPage(): React.ReactElement {
 
   return (
     <AppLayout title={list?.name ?? 'List'}>
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              {list?.emoji && <span>{list.emoji}</span>}
-              {list?.name ?? 'Loading...'}
+        <div className="flex items-start sm:items-center justify-between gap-4">
+          <div className="space-y-1 min-w-0">
+            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+              {list?.emoji && <span className="shrink-0">{list.emoji}</span>}
+              <span className="truncate">{list?.name ?? 'Loading...'}</span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {tasks.length} task{tasks.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={() => setIsFormOpen(true)} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Task
+          <div className="flex items-center gap-2 shrink-0">
+            <Button 
+              onClick={() => setIsFormOpen(true)} 
+              size="sm"
+              className="h-10 px-4 sm:h-8 sm:px-3"
+            >
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Task</span>
             </Button>
             {!isInbox && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" className="h-10 w-10 sm:h-8 sm:w-8">
                     <Settings className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent align="end" className="w-40 p-1">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start"
+                    className="w-full justify-start h-10 sm:h-8"
                     onClick={() => setIsEditListOpen(true)}
                   >
                     Edit List
                   </Button>
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-destructive hover:text-destructive"
+                    className="w-full justify-start h-10 sm:h-8 text-destructive hover:text-destructive"
                     onClick={() => setIsDeleteConfirmOpen(true)}
                   >
                     <Trash2 className="h-4 w-4 mr-2" />

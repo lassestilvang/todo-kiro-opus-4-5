@@ -21,8 +21,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { ColorPicker, EmojiPicker } from '@/components/common';
-import { toast } from 'sonner';
+import { ColorPicker, EmojiPicker, TaskListSkeleton, QueryErrorFallback } from '@/components/common';
+import { showSuccess, showError } from '@/lib/utils/toast';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput, UpdateListInput } from '@/types';
 
 /**
@@ -241,10 +241,10 @@ export default function ListDetailPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['lists'] });
       queryClient.invalidateQueries({ queryKey: ['list', listId] });
       setIsEditListOpen(false);
-      toast.success('List updated');
+      showSuccess('List updated');
     },
     onError: () => {
-      toast.error('Failed to update list');
+      showError('Failed to update list');
     },
   });
 
@@ -254,11 +254,11 @@ export default function ListDetailPage(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lists'] });
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      toast.success('List deleted. Tasks moved to Inbox.');
+      showSuccess('List deleted. Tasks moved to Inbox.');
       router.push('/today');
     },
     onError: () => {
-      toast.error('Failed to delete list');
+      showError('Failed to delete list');
     },
   });
 
@@ -270,7 +270,7 @@ export default function ListDetailPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -280,10 +280,10 @@ export default function ListDetailPage(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
-      toast.success('Task created');
+      showSuccess('Task created');
     },
     onError: () => {
-      toast.error('Failed to create task');
+      showError('Failed to create task');
     },
   });
 
@@ -293,10 +293,10 @@ export default function ListDetailPage(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setSelectedTask(null);
-      toast.success('Task updated');
+      showSuccess('Task updated');
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -307,10 +307,10 @@ export default function ListDetailPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
       setSelectedTask(null);
-      toast.success('Task deleted');
+      showSuccess('Task deleted');
     },
     onError: () => {
-      toast.error('Failed to delete task');
+      showError('Failed to delete task');
     },
   });
 
@@ -354,7 +354,7 @@ export default function ListDetailPage(): React.ReactElement {
 
   const handleUpdateList = (): void => {
     if (!editName.trim()) {
-      toast.error('List name is required');
+      showError('List name is required');
       return;
     }
     updateListMutation.mutate({
@@ -371,15 +371,18 @@ export default function ListDetailPage(): React.ReactElement {
     deleteListMutation.mutate(listId);
   };
 
+  const handleRetry = (): void => {
+    queryClient.invalidateQueries({ queryKey: ['list', listId] });
+    queryClient.invalidateQueries({ queryKey: ['tasks', 'list', listId] });
+  };
+
   if (listError) {
     return (
       <AppLayout title="List">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-destructive">List not found or failed to load.</p>
-          <Button variant="link" onClick={() => router.push('/today')}>
-            Go to Today
-          </Button>
-        </div>
+        <QueryErrorFallback 
+          message="List not found or failed to load."
+          onRetry={handleRetry}
+        />
       </AppLayout>
     );
   }
@@ -437,14 +440,7 @@ export default function ListDetailPage(): React.ReactElement {
 
         {/* Task List */}
         {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-16 rounded-lg border bg-muted/50 animate-pulse"
-              />
-            ))}
-          </div>
+          <TaskListSkeleton count={5} />
         ) : (
           <TaskList
             tasks={tasks}

@@ -12,7 +12,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/lib/utils/toast';
+import { TaskListSkeleton, QueryErrorFallback } from '@/components/common';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput } from '@/types';
 
 /**
@@ -173,7 +174,7 @@ export default function UpcomingPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -183,10 +184,10 @@ export default function UpcomingPage(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setIsFormOpen(false);
-      toast.success('Task created');
+      showSuccess('Task created');
     },
     onError: () => {
-      toast.error('Failed to create task');
+      showError('Failed to create task');
     },
   });
 
@@ -196,10 +197,10 @@ export default function UpcomingPage(): React.ReactElement {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       setSelectedTask(null);
-      toast.success('Task updated');
+      showSuccess('Task updated');
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -210,10 +211,10 @@ export default function UpcomingPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
       setSelectedTask(null);
-      toast.success('Task deleted');
+      showSuccess('Task deleted');
     },
     onError: () => {
-      toast.error('Failed to delete task');
+      showError('Failed to delete task');
     },
   });
 
@@ -251,12 +252,17 @@ export default function UpcomingPage(): React.ReactElement {
     }
   };
 
+  const handleRetry = (): void => {
+    queryClient.invalidateQueries({ queryKey: ['tasks', 'upcoming'] });
+  };
+
   if (error) {
     return (
       <AppLayout title="Upcoming">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-destructive">Failed to load tasks. Please try again.</p>
-        </div>
+        <QueryErrorFallback 
+          message="Failed to load upcoming tasks. Please try again."
+          onRetry={handleRetry}
+        />
       </AppLayout>
     );
   }
@@ -281,14 +287,7 @@ export default function UpcomingPage(): React.ReactElement {
 
         {/* Task List - grouped by date */}
         {isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-16 rounded-lg border bg-muted/50 animate-pulse"
-              />
-            ))}
-          </div>
+          <TaskListSkeleton count={5} />
         ) : (
           <TaskList
             tasks={tasks}

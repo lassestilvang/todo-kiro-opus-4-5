@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
+import { ErrorBoundary, SidebarSkeleton } from '@/components/common';
 import type { List, Label } from '@/types';
 
 interface AppLayoutProps {
@@ -33,12 +34,12 @@ export function AppLayout({ children, title }: AppLayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
 
-  const { data: lists = [] } = useQuery({
+  const { data: lists = [], isLoading: listsLoading } = useQuery({
     queryKey: ['lists'],
     queryFn: fetchLists,
   });
 
-  const { data: labels = [] } = useQuery({
+  const { data: labels = [], isLoading: labelsLoading } = useQuery({
     queryKey: ['labels'],
     queryFn: fetchLabels,
   });
@@ -49,55 +50,69 @@ export function AppLayout({ children, title }: AppLayoutProps) {
     refetchInterval: 60000, // Refresh every minute
   });
 
-  const handleToggleSidebar = () => {
+  const handleToggleSidebar = (): void => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
 
-  const handleMobileMenuClick = () => {
+  const handleMobileMenuClick = (): void => {
     setMobileMenuOpen(!mobileMenuOpen);
   };
 
-  return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
-        <Sidebar
-          lists={lists}
-          labels={labels}
-          overdueCount={overdueCount}
-          collapsed={sidebarCollapsed}
-          onToggleCollapse={handleToggleSidebar}
-        />
-      </div>
+  const sidebarLoading = listsLoading || labelsLoading;
 
-      {/* Mobile Sidebar Overlay */}
-      {mobileMenuOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
+  return (
+    <ErrorBoundary>
+      <div className="flex h-screen overflow-hidden bg-background">
+        {/* Desktop Sidebar */}
+        <div className="hidden lg:block">
+          {sidebarLoading ? (
+            <SidebarSkeleton collapsed={sidebarCollapsed} />
+          ) : (
             <Sidebar
               lists={lists}
               labels={labels}
               overdueCount={overdueCount}
-              collapsed={false}
-              onToggleCollapse={() => setMobileMenuOpen(false)}
+              collapsed={sidebarCollapsed}
+              onToggleCollapse={handleToggleSidebar}
             />
-          </div>
-        </>
-      )}
+          )}
+        </div>
 
-      {/* Main Content */}
-      <MainPanel
-        title={title}
-        showMenuButton
-        onMenuClick={handleMobileMenuClick}
-      >
-        {children}
-      </MainPanel>
-    </div>
+        {/* Mobile Sidebar Overlay */}
+        {mobileMenuOpen && (
+          <>
+            <div
+              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div className="fixed inset-y-0 left-0 z-50 lg:hidden">
+              {sidebarLoading ? (
+                <SidebarSkeleton collapsed={false} />
+              ) : (
+                <Sidebar
+                  lists={lists}
+                  labels={labels}
+                  overdueCount={overdueCount}
+                  collapsed={false}
+                  onToggleCollapse={() => setMobileMenuOpen(false)}
+                />
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Main Content */}
+        <MainPanel
+          title={title}
+          showMenuButton
+          onMenuClick={handleMobileMenuClick}
+        >
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
+        </MainPanel>
+      </div>
+    </ErrorBoundary>
   );
 }
 

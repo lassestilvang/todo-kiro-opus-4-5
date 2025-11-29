@@ -10,7 +10,8 @@ import {
   Dialog,
   DialogContent,
 } from '@/components/ui/dialog';
-import { toast } from 'sonner';
+import { showSuccess, showError } from '@/lib/utils/toast';
+import { TaskListSkeleton, QueryErrorFallback } from '@/components/common';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput } from '@/types';
 
 /**
@@ -162,7 +163,7 @@ export default function SearchPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -173,10 +174,10 @@ export default function SearchPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
       queryClient.invalidateQueries({ queryKey: ['search'] });
       setSelectedTask(null);
-      toast.success('Task updated');
+      showSuccess('Task updated');
     },
     onError: () => {
-      toast.error('Failed to update task');
+      showError('Failed to update task');
     },
   });
 
@@ -188,10 +189,10 @@ export default function SearchPage(): React.ReactElement {
       queryClient.invalidateQueries({ queryKey: ['search'] });
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
       setSelectedTask(null);
-      toast.success('Task deleted');
+      showSuccess('Task deleted');
     },
     onError: () => {
-      toast.error('Failed to delete task');
+      showError('Failed to delete task');
     },
   });
 
@@ -221,12 +222,17 @@ export default function SearchPage(): React.ReactElement {
     }
   };
 
+  const handleRetry = (): void => {
+    queryClient.invalidateQueries({ queryKey: ['search', query] });
+  };
+
   if (error) {
     return (
       <AppLayout title="Search">
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-destructive">Search failed. Please try again.</p>
-        </div>
+        <QueryErrorFallback 
+          message="Search failed. Please try again."
+          onRetry={handleRetry}
+        />
       </AppLayout>
     );
   }
@@ -254,14 +260,7 @@ export default function SearchPage(): React.ReactElement {
             <p className="text-muted-foreground">Enter a search term to find tasks.</p>
           </div>
         ) : isLoading ? (
-          <div className="space-y-2">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-16 rounded-lg border bg-muted/50 animate-pulse"
-              />
-            ))}
-          </div>
+          <TaskListSkeleton count={5} />
         ) : tasks.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-muted-foreground">No tasks found matching &quot;{query}&quot;.</p>

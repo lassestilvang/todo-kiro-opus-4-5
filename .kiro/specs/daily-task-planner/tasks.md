@@ -349,20 +349,20 @@
     - Display search results ranked by relevance
     - _Requirements: 17.2_
 
-- [ ] 24. React Query Hooks
-  - [ ] 24.1 Implement data fetching hooks
+- [x] 24. React Query Hooks
+  - [x] 24.1 Implement data fetching hooks
     - useTasks(), useTask(), useTaskMutations()
     - useLists(), useListMutations()
     - useLabels(), useLabelMutations()
     - useSearch()
     - _Requirements: 25.1, 25.2, 25.3_
 
-- [ ] 25. Loading and Error States
-  - [ ] 25.1 Implement loading skeletons
+- [x] 25. Loading and Error States
+  - [x] 25.1 Implement loading skeletons
     - Task list skeleton
     - Sidebar skeleton
     - _Requirements: 25.1_
-  - [ ] 25.2 Implement error boundaries and toast notifications
+  - [x] 25.2 Implement error boundaries and toast notifications
     - Global error boundary
     - Toast for success/error feedback
     - _Requirements: 25.2, 25.3_

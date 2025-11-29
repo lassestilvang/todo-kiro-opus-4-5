@@ -29,3 +29,16 @@ export {
 } from './Skeleton';
 
 export { ErrorBoundary, ErrorFallback, QueryErrorFallback } from './ErrorBoundary';
+
+export {
+  AnimatedDialog,
+  AnimatedDialogTrigger,
+  AnimatedDialogContent,
+  AnimatedDialogHeader,
+  AnimatedDialogFooter,
+  AnimatedDialogTitle,
+  AnimatedDialogDescription,
+  AnimatedDialogClose,
+} from './AnimatedDialog';
+
+export { PageTransition, FadeTransition, SlideTransition } from './PageTransition';

@@ -367,19 +367,19 @@
     - Toast for success/error feedback
     - _Requirements: 25.2, 25.3_
 
-- [ ] 26. Animations and Transitions
-  - [ ] 26.1 Add Framer Motion animations
+- [x] 26. Animations and Transitions
+  - [x] 26.1 Add Framer Motion animations
     - Task list item animations
     - Sidebar collapse animation
     - Modal/dialog animations
     - _Requirements: 21.1_
-  - [ ] 26.2 Configure View Transition API
+  - [x] 26.2 Configure View Transition API
     - Page transition animations
     - Fallback for unsupported browsers
     - _Requirements: 21.1, 21.2_
 
-- [ ] 27. Responsive Design
-  - [ ] 27.1 Implement mobile layout
+- [-] 27. Responsive Design
+  - [-] 27.1 Implement mobile layout
     - Collapsible sidebar
     - Touch-friendly interactions
     - Responsive task forms

@@ -121,22 +121,71 @@
   }
 }
 
-/* View Transition API styles */
+/* View Transition API styles
+ * Requirements: 21.1, 21.2
+ * Provides smooth page transitions when navigating between views.
+ * Falls back gracefully on unsupported browsers via @supports.
+ */
 @supports (view-transition-name: none) {
+  /* Root transition - controls overall page transition */
+  ::view-transition-group(root) {
+    animation-duration: 250ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Main content area transitions */
   ::view-transition-old(main-content),
   ::view-transition-new(main-content) {
     animation-duration: 200ms;
-    animation-timing-function: ease-in-out;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   ::view-transition-old(main-content) {
-    animation-name: fade-out;
+    animation-name: slide-out-to-left;
   }
 
   ::view-transition-new(main-content) {
-    animation-name: fade-in;
+    animation-name: slide-in-from-right;
   }
 
+  /* Sidebar stays fixed during transitions */
+  ::view-transition-old(sidebar),
+  ::view-transition-new(sidebar) {
+    animation: none;
+    mix-blend-mode: normal;
+  }
+
+  /* Task item transitions for smooth list updates */
+  ::view-transition-old(task-item),
+  ::view-transition-new(task-item) {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Slide animations */
+  @keyframes slide-out-to-left {
+    from {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-8px);
+    }
+  }
+
+  @keyframes slide-in-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Fade animations for fallback */
   @keyframes fade-out {
     from {
       opacity: 1;
@@ -153,5 +202,37 @@
     to {
       opacity: 1;
     }
+  }
+
+  /* Scale animations for modals/dialogs */
+  @keyframes scale-out {
+    from {
+      opacity: 1;
+      transform: scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+}
+
+/* Reduced motion preference - disable animations for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
 }

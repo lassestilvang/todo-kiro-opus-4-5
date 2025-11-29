@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search } from 'lucide-react';
@@ -119,12 +120,12 @@ async function deleteTask(taskId: string): Promise<void> {
 }
 
 /**
- * Search Results Page Component
+ * Search Results Content Component
  * Displays search results ranked by relevance.
  * 
  * Requirements: 17.2
  */
-export default function SearchPage(): React.ReactElement {
+function SearchContent(): React.ReactElement {
   const searchParams = useSearchParams();
   const queryClient = useQueryClient();
   const query = searchParams.get('q') ?? '';
@@ -298,5 +299,21 @@ export default function SearchPage(): React.ReactElement {
         </DialogContent>
       </Dialog>
     </AppLayout>
+  );
+}
+
+/**
+ * Search Results Page with Suspense boundary
+ * Required for useSearchParams() in Next.js App Router
+ */
+export default function SearchPage(): React.ReactElement {
+  return (
+    <Suspense fallback={
+      <AppLayout title="Search">
+        <TaskListSkeleton count={5} />
+      </AppLayout>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }

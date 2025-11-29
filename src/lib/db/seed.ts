@@ -64,8 +64,11 @@ export async function ensureInboxExists() {
   return inbox;
 }
 
-// Run seed if executed directly
-if (import.meta.main) {
+// Run seed if executed directly via: bun run src/lib/db/seed.ts
+// Using require.main check for Node.js compatibility, or call seed() directly when using Bun
+const isMainModule = typeof require !== 'undefined' && require.main === module;
+
+if (isMainModule) {
   seed()
     .then(() => {
       console.log('Seed completed');

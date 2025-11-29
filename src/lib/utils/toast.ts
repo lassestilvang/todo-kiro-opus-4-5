@@ -81,7 +81,8 @@ export function showPromise<T>(
     error: string | ((error: Error) => string);
   }
 ): Promise<T> {
-  return toast.promise(promise, messages);
+  toast.promise(promise, messages);
+  return promise;
 }
 
 // Re-export toast for direct access if needed

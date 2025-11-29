@@ -163,41 +163,41 @@
 - [x] 11. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 12. Search Service Implementation
-  - [ ] 12.1 Implement fuzzy search
+- [x] 12. Search Service Implementation
+  - [x] 12.1 Implement fuzzy search
     - Configure Fuse.js for task search
     - Search across name, description, and label names
     - Return results ranked by relevance score
     - _Requirements: 17.1, 17.2, 17.3, 17.4_
-  - [ ] 12.2 Write property tests for search
+  - [x] 12.2 Write property tests for search
     - **Property 34: Fuzzy Search Matching**
     - **Property 35: Search Result Ranking**
     - **Validates: Requirements 17.1, 17.2, 17.3**
 
-- [ ] 13. Attachment Service Implementation
-  - [ ] 13.1 Implement file attachment handling
+- [x] 13. Attachment Service Implementation
+  - [x] 13.1 Implement file attachment handling
     - Create upload endpoint with file storage
     - Store metadata in database
     - Implement download endpoint
     - Implement delete with file cleanup
     - _Requirements: 11.1, 11.2, 11.3, 11.4_
-  - [ ] 13.2 Write property tests for attachments
+  - [x] 13.2 Write property tests for attachments
     - **Property 23: Attachment Metadata Persistence**
     - **Property 24: Attachment Cascade Delete**
     - **Validates: Requirements 11.1, 11.2, 11.3**
 
-- [ ] 14. Reminder Service Implementation
-  - [ ] 14.1 Implement reminder management
+- [x] 14. Reminder Service Implementation
+  - [x] 14.1 Implement reminder management
     - Create scheduleReminder() with predefined and custom intervals
     - Implement cancelReminder()
     - Store reminder method (push, email, in-app)
     - _Requirements: 27.1, 27.2, 27.4, 27.5_
-  - [ ] 14.2 Write property tests for reminders
+  - [x] 14.2 Write property tests for reminders
     - **Property 38: Reminder Interval Storage**
     - **Property 39: Multiple Reminder Support**
     - **Validates: Requirements 27.1, 27.2, 27.4**
 
-- [ ] 15. Checkpoint - Ensure all tests pass
+- [x] 15. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 16. Natural Language Parser

@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { QueryProvider } from "@/components/query-provider";
 import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
@@ -19,6 +20,12 @@ export const metadata: Metadata = {
   description: "A modern task management application",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -33,9 +40,11 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          disableTransitionOnChange={false}
         >
-          {children}
+          <QueryProvider>
+            {children}
+          </QueryProvider>
           <Toaster />
         </ThemeProvider>
       </body>

@@ -229,36 +229,36 @@
 - [x] 18. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 19. API Routes
-  - [ ] 19.1 Implement Task API routes
+- [x] 19. API Routes
+  - [x] 19.1 Implement Task API routes
     - GET/POST /api/tasks
     - GET/PUT/DELETE /api/tasks/[id]
     - POST /api/tasks/[id]/subtasks
     - GET /api/tasks/[id]/history
     - _Requirements: 3.1, 3.2, 4.1, 5.1, 6.1_
-  - [ ] 19.2 Implement List API routes
+  - [x] 19.2 Implement List API routes
     - GET/POST /api/lists
     - GET/PUT/DELETE /api/lists/[id]
     - _Requirements: 2.1, 2.2, 2.3_
-  - [ ] 19.3 Implement Label API routes
+  - [x] 19.3 Implement Label API routes
     - GET/POST /api/labels
     - GET/PUT/DELETE /api/labels/[id]
     - _Requirements: 8.1, 8.4_
-  - [ ] 19.4 Implement Search API route
+  - [x] 19.4 Implement Search API route
     - GET /api/search?q=query
     - _Requirements: 17.1_
-  - [ ] 19.5 Implement Attachment API routes
+  - [x] 19.5 Implement Attachment API routes
     - POST /api/attachments (multipart upload)
     - GET/DELETE /api/attachments/[id]
     - _Requirements: 11.1, 11.3_
 
-- [ ] 20. Layout Components
-  - [ ] 20.1 Create root layout with providers
+- [x] 20. Layout Components
+  - [x] 20.1 Create root layout with providers
     - Set up ThemeProvider for light/dark mode
     - Set up React Query provider
     - Configure View Transition API
     - _Requirements: 19.1, 19.2, 21.1, 21.2_
-  - [ ] 20.2 Implement Sidebar component
+  - [x] 20.2 Implement Sidebar component
     - Display views (Today, Next 7 Days, Upcoming, All)
     - Display lists with Inbox first
     - Display labels
@@ -266,7 +266,7 @@
     - Highlight current selection
     - Collapsible on mobile
     - _Requirements: 18.1, 18.2, 18.3, 18.4, 16.2_
-  - [ ] 20.3 Implement MainPanel component
+  - [x] 20.3 Implement MainPanel component
     - Header with search bar and theme toggle
     - Content area for task lists
     - Responsive layout

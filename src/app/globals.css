@@ -120,3 +120,38 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* View Transition API styles */
+@supports (view-transition-name: none) {
+  ::view-transition-old(main-content),
+  ::view-transition-new(main-content) {
+    animation-duration: 200ms;
+    animation-timing-function: ease-in-out;
+  }
+
+  ::view-transition-old(main-content) {
+    animation-name: fade-out;
+  }
+
+  ::view-transition-new(main-content) {
+    animation-name: fade-in;
+  }
+
+  @keyframes fade-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+}

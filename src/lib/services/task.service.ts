@@ -1,5 +1,5 @@
 import { db, schema } from '@/lib/db';
-import { eq, and, desc, asc, gte, lte } from 'drizzle-orm';
+import { eq, and, desc, asc, gte, lt } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import type {
   Task,
@@ -10,8 +10,10 @@ import type {
   TaskHistoryEntry,
   ITaskService,
   RecurrencePattern,
+  GroupedTasks,
 } from '@/types';
 import { validateCreateTask, validateUpdateTask, DEFAULT_PRIORITY } from '@/lib/utils/validation';
+import { calculateNextOccurrence } from '@/lib/utils/recurrence';
 import { listService } from './list.service';
 
 // Custom error classes for Task service
@@ -167,6 +169,49 @@ async function getSubtasksForTask(taskId: string): Promise<Subtask[]> {
     .orderBy(asc(schema.subtasks.order));
 
   return rows.map(toSubtask);
+}
+
+/**
+ * Groups tasks by their date.
+ * Tasks are grouped by the date portion (YYYY-MM-DD) of their date field.
+ */
+function groupTasksByDate(tasks: Task[]): GroupedTasks[] {
+  const groups = new Map<string, Task[]>();
+
+  for (const task of tasks) {
+    if (!task.date) continue;
+    
+    const dateKey = task.date.toISOString().split('T')[0];
+    const existing = groups.get(dateKey) || [];
+    existing.push(task);
+    groups.set(dateKey, existing);
+  }
+
+  const result: GroupedTasks[] = [];
+  for (const [dateKey, groupTasks] of groups) {
+    const date = new Date(dateKey);
+    date.setHours(0, 0, 0, 0);
+    result.push({
+      date,
+      dateKey,
+      tasks: groupTasks,
+    });
+  }
+
+  // Sort by date ascending
+  result.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  return result;
+}
+
+/**
+ * Checks if a task is overdue.
+ * A task is overdue if it's incomplete and has a deadline in the past.
+ */
+export function isOverdue(task: Task): boolean {
+  if (task.completed) return false;
+  if (!task.deadline) return false;
+  return task.deadline < new Date();
 }
 
 /**
@@ -501,14 +546,14 @@ export const taskService: ITaskService = {
   /**
    * Gets tasks within a date range.
    * @param start - Start date (inclusive)
-   * @param end - End date (inclusive)
+   * @param end - End date (exclusive)
    * @param includeCompleted - Whether to include completed tasks (default: true)
    * @returns Tasks within the date range
    */
   async getByDateRange(start: Date, end: Date, includeCompleted = true): Promise<Task[]> {
     const conditions = [
       gte(schema.tasks.date, start),
-      lte(schema.tasks.date, end),
+      lt(schema.tasks.date, end),
     ];
 
     if (!includeCompleted) {
@@ -534,6 +579,7 @@ export const taskService: ITaskService = {
 
   /**
    * Gets tasks scheduled for today.
+   * Tasks with date matching the current date (ignoring time).
    * @param includeCompleted - Whether to include completed tasks (default: true)
    * @returns Today's tasks
    */
@@ -545,6 +591,75 @@ export const taskService: ITaskService = {
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     return this.getByDateRange(today, tomorrow, includeCompleted);
+  },
+
+  /**
+   * Gets tasks for the next 7 days (from today through 7 days ahead).
+   * @param includeCompleted - Whether to include completed tasks (default: true)
+   * @returns Tasks for the next 7 days
+   */
+  async getNext7Days(includeCompleted = true): Promise<Task[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const endDate = new Date(today);
+    endDate.setDate(endDate.getDate() + 8); // +8 because end is exclusive
+
+    return this.getByDateRange(today, endDate, includeCompleted);
+  },
+
+  /**
+   * Gets tasks for the next 7 days grouped by date.
+   * @param includeCompleted - Whether to include completed tasks (default: true)
+   * @returns Tasks grouped by date
+   */
+  async getNext7DaysGrouped(includeCompleted = true): Promise<GroupedTasks[]> {
+    const tasks = await this.getNext7Days(includeCompleted);
+    return groupTasksByDate(tasks);
+  },
+
+  /**
+   * Gets all upcoming tasks (from today onward).
+   * @param includeCompleted - Whether to include completed tasks (default: true)
+   * @returns Upcoming tasks
+   */
+  async getUpcoming(includeCompleted = true): Promise<Task[]> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const conditions = [
+      gte(schema.tasks.date, today),
+    ];
+
+    if (!includeCompleted) {
+      conditions.push(eq(schema.tasks.completed, false));
+    }
+
+    const rows = await db
+      .select()
+      .from(schema.tasks)
+      .where(and(...conditions))
+      .orderBy(asc(schema.tasks.date), asc(schema.tasks.createdAt));
+
+    const tasks: Task[] = [];
+    for (const row of rows) {
+      const task = toTask(row);
+      task.labels = await getLabelsForTask(row.id);
+      task.subtasks = await getSubtasksForTask(row.id);
+      tasks.push(task);
+    }
+
+    return tasks;
+  },
+
+  /**
+   * Gets upcoming tasks grouped by date.
+   * @param includeCompleted - Whether to include completed tasks (default: true)
+   * @returns Tasks grouped by date
+   */
+  async getUpcomingGrouped(includeCompleted = true): Promise<GroupedTasks[]> {
+    const tasks = await this.getUpcoming(includeCompleted);
+    return groupTasksByDate(tasks);
   },
 
   /**
@@ -560,7 +675,7 @@ export const taskService: ITaskService = {
       .where(
         and(
           eq(schema.tasks.completed, false),
-          lte(schema.tasks.deadline, now)
+          lt(schema.tasks.deadline, now)
         )
       )
       .orderBy(asc(schema.tasks.deadline));
@@ -574,6 +689,26 @@ export const taskService: ITaskService = {
     }
 
     return tasks;
+  },
+
+  /**
+   * Gets the count of overdue tasks.
+   * @returns Number of overdue tasks
+   */
+  async getOverdueCount(): Promise<number> {
+    const now = new Date();
+
+    const rows = await db
+      .select({ id: schema.tasks.id })
+      .from(schema.tasks)
+      .where(
+        and(
+          eq(schema.tasks.completed, false),
+          lt(schema.tasks.deadline, now)
+        )
+      );
+
+    return rows.length;
   },
 
   /**
@@ -765,121 +900,5 @@ export const taskService: ITaskService = {
     return rows.map(toHistoryEntry);
   },
 };
-
-
-/**
- * Calculates the next occurrence date for a recurring task.
- * @param currentDate - The current task date
- * @param recurrence - The recurrence pattern
- * @returns The next occurrence date or null if cannot be calculated
- */
-function calculateNextOccurrence(currentDate: Date, recurrence: RecurrencePattern): Date | null {
-  const date = new Date(currentDate);
-  const interval = recurrence.interval ?? 1;
-
-  switch (recurrence.type) {
-    case 'daily':
-      date.setDate(date.getDate() + interval);
-      return date;
-
-    case 'weekly':
-      date.setDate(date.getDate() + (7 * interval));
-      return date;
-
-    case 'weekday':
-      // Move to next weekday
-      do {
-        date.setDate(date.getDate() + 1);
-      } while (date.getDay() === 0 || date.getDay() === 6);
-      return date;
-
-    case 'monthly':
-      date.setMonth(date.getMonth() + interval);
-      return date;
-
-    case 'yearly':
-      date.setFullYear(date.getFullYear() + interval);
-      return date;
-
-    case 'custom':
-      return calculateCustomRecurrence(date, recurrence);
-
-    default:
-      return null;
-  }
-}
-
-/**
- * Calculates the next occurrence for custom recurrence patterns.
- * @param currentDate - The current task date
- * @param recurrence - The custom recurrence pattern
- * @returns The next occurrence date or null if cannot be calculated
- */
-function calculateCustomRecurrence(currentDate: Date, recurrence: RecurrencePattern): Date | null {
-  const date = new Date(currentDate);
-  const interval = recurrence.interval ?? 1;
-
-  // Handle specific weekdays pattern (e.g., Mon, Wed, Fri)
-  if (recurrence.weekdays && recurrence.weekdays.length > 0) {
-    const weekdays = recurrence.weekdays.sort((a, b) => a - b);
-    const currentDay = date.getDay();
-    
-    // Find the next weekday in the pattern
-    const nextDay = weekdays.find(d => d > currentDay);
-    
-    if (nextDay !== undefined) {
-      // Found a day later this week
-      date.setDate(date.getDate() + (nextDay - currentDay));
-    } else {
-      // Move to next week and use the first day in the pattern
-      const daysUntilNextWeek = 7 - currentDay + weekdays[0];
-      date.setDate(date.getDate() + daysUntilNextWeek);
-    }
-    
-    return date;
-  }
-
-  // Handle ordinal weekday pattern (e.g., 3rd Monday)
-  if (recurrence.ordinal !== undefined && recurrence.ordinalWeekday !== undefined) {
-    // Move to next month
-    date.setMonth(date.getMonth() + interval);
-    date.setDate(1);
-    
-    // Find the nth occurrence of the weekday
-    const targetWeekday = recurrence.ordinalWeekday;
-    const targetOrdinal = recurrence.ordinal;
-    
-    let count = 0;
-    while (count < targetOrdinal) {
-      if (date.getDay() === targetWeekday) {
-        count++;
-        if (count === targetOrdinal) {
-          return date;
-        }
-      }
-      date.setDate(date.getDate() + 1);
-    }
-    
-    return date;
-  }
-
-  // Handle specific day of month
-  if (recurrence.monthDay !== undefined) {
-    date.setMonth(date.getMonth() + interval);
-    date.setDate(Math.min(recurrence.monthDay, getDaysInMonth(date)));
-    return date;
-  }
-
-  // Default: just add interval days
-  date.setDate(date.getDate() + interval);
-  return date;
-}
-
-/**
- * Gets the number of days in a month.
- */
-function getDaysInMonth(date: Date): number {
-  return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-}
 
 export default taskService;

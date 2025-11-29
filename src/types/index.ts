@@ -131,6 +131,13 @@ export interface ScheduleSuggestion {
   reason: string;
 }
 
+// Grouped tasks by date for views
+export interface GroupedTasks {
+  date: Date;
+  dateKey: string;             // ISO date string (YYYY-MM-DD) for grouping
+  tasks: Task[];
+}
+
 // Input types for creating entities
 export interface CreateTaskInput {
   name: string;
@@ -202,7 +209,12 @@ export interface ITaskService {
   getByListId(listId: string, includeCompleted?: boolean): Promise<Task[]>;
   getByDateRange(start: Date, end: Date, includeCompleted?: boolean): Promise<Task[]>;
   getToday(includeCompleted?: boolean): Promise<Task[]>;
+  getNext7Days(includeCompleted?: boolean): Promise<Task[]>;
+  getNext7DaysGrouped(includeCompleted?: boolean): Promise<GroupedTasks[]>;
+  getUpcoming(includeCompleted?: boolean): Promise<Task[]>;
+  getUpcomingGrouped(includeCompleted?: boolean): Promise<GroupedTasks[]>;
   getOverdue(): Promise<Task[]>;
+  getOverdueCount(): Promise<number>;
   getAll(includeCompleted?: boolean): Promise<Task[]>;
   toggleComplete(id: string): Promise<Task>;
   addSubtask(taskId: string, name: string): Promise<Subtask>;

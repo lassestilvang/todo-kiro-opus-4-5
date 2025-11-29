@@ -119,29 +119,29 @@
 - [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Recurrence Utilities
-  - [ ] 9.1 Implement recurrence pattern utilities
+- [x] 9. Recurrence Utilities
+  - [x] 9.1 Implement recurrence pattern utilities
     - Create parseRecurrencePattern() for all pattern types
     - Implement calculateNextOccurrence() for each pattern type
     - Implement formatRecurrencePattern() for human-readable display
     - Support custom patterns (interval, weekdays, ordinal)
     - _Requirements: 10.1, 10.2, 10.3, 10.4_
-  - [ ] 9.2 Write property tests for recurrence
+  - [x] 9.2 Write property tests for recurrence
     - **Property 19: Recurrence Pattern Validation**
     - **Property 20: Recurring Task Next Occurrence**
     - **Property 21: Custom Recurrence Calculation**
     - **Property 22: Recurrence Pattern Formatting**
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
 
-- [ ] 10. View Filtering Implementation
-  - [ ] 10.1 Implement view query methods
+- [x] 10. View Filtering Implementation
+  - [x] 10.1 Implement view query methods
     - Implement getToday() - tasks with date = today
     - Implement getNext7Days() - tasks from today to +7 days
     - Implement getUpcoming() - tasks from today onward
     - Implement getAll() - all tasks
     - Add includeCompleted parameter to all methods
     - _Requirements: 12.1, 12.2, 13.1, 13.2, 13.3, 14.1, 14.2, 14.3, 15.1, 15.2, 15.3_
-  - [ ] 10.2 Write property tests for view filtering
+  - [x] 10.2 Write property tests for view filtering
     - **Property 25: Today View Date Filter**
     - **Property 26: Completed Task Toggle Filter**
     - **Property 27: Next 7 Days View Date Range**
@@ -149,18 +149,18 @@
     - **Property 29: Upcoming View Future Filter**
     - **Property 30: All View Completeness**
     - **Validates: Requirements 12.1, 12.2, 13.1, 13.2, 13.3, 14.1, 14.2, 14.3, 15.1, 15.2**
-  - [ ] 10.3 Implement overdue task detection
+  - [x] 10.3 Implement overdue task detection
     - Create isOverdue() utility
     - Implement getOverdue() query
     - Implement getOverdueCount() for sidebar badge
     - _Requirements: 16.1, 16.2, 16.3_
-  - [ ] 10.4 Write property tests for overdue detection
+  - [x] 10.4 Write property tests for overdue detection
     - **Property 31: Overdue Task Detection**
     - **Property 32: Overdue Count Accuracy**
     - **Property 33: Overdue Completion Clearing**
     - **Validates: Requirements 16.1, 16.2, 16.3**
 
-- [ ] 11. Checkpoint - Ensure all tests pass
+- [x] 11. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 12. Search Service Implementation

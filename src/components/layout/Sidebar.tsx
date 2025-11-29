@@ -336,30 +336,21 @@ export function Sidebar({
         </div>
 
         {/* Labels Section */}
-        <AnimatePresence>
-          {labels.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="mt-6 space-y-1"
-            >
-              <SectionHeader title="Labels" collapsed={isCollapsed} onAdd={onCreateLabel} />
-              {labels.map((label, index) => (
-                <NavItem
-                  key={label.id}
-                  href={`/label/${label.id}`}
-                  icon={label.icon ? <span>{label.icon}</span> : <Tag className="h-4 w-4" />}
-                  label={label.name}
-                  isActive={pathname === `/label/${label.id}`}
-                  collapsed={isCollapsed}
-                  index={index}
-                  isMobile={isMobile}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="mt-6 space-y-1">
+          <SectionHeader title="Labels" collapsed={isCollapsed} onAdd={onCreateLabel} />
+          {labels.map((label, index) => (
+            <NavItem
+              key={label.id}
+              href={`/label/${label.id}`}
+              icon={label.icon ? <span>{label.icon}</span> : <Tag className="h-4 w-4" />}
+              label={label.name}
+              isActive={pathname === `/label/${label.id}`}
+              collapsed={isCollapsed}
+              index={index}
+              isMobile={isMobile}
+            />
+          ))}
+        </div>
       </nav>
     </motion.aside>
   );

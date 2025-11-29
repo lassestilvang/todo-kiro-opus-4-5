@@ -1,13 +1,23 @@
 'use client';
 
 import * as React from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence, useDragControls, PanInfo } from 'framer-motion';
+import { toast } from 'sonner';
 import { Sidebar } from './Sidebar';
 import { MainPanel } from './MainPanel';
 import { ErrorBoundary, SidebarSkeleton } from '@/components/common';
-import type { List, Label } from '@/types';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import type { List, Label, CreateListInput, CreateLabelInput } from '@/types';
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -32,6 +42,32 @@ async function fetchOverdueCount(): Promise<number> {
   return 0;
 }
 
+async function createList(data: CreateListInput): Promise<List> {
+  const res = await fetch('/api/lists', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error?.message || 'Failed to create list');
+  }
+  return res.json();
+}
+
+async function createLabel(data: CreateLabelInput): Promise<Label> {
+  const res = await fetch('/api/labels', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const error = await res.json();
+    throw new Error(error.error?.message || 'Failed to create label');
+  }
+  return res.json();
+}
+
 /**
  * AppLayout Component
  * Main application layout with responsive sidebar and mobile support.
@@ -43,8 +79,13 @@ async function fetchOverdueCount(): Promise<number> {
  */
 export function AppLayout({ children, title }: AppLayoutProps) {
   const pathname = usePathname();
+  const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = React.useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+  const [createListOpen, setCreateListOpen] = React.useState(false);
+  const [createLabelOpen, setCreateLabelOpen] = React.useState(false);
+  const [newListName, setNewListName] = React.useState('');
+  const [newLabelName, setNewLabelName] = React.useState('');
   const dragControls = useDragControls();
   
   // Track touch start position for swipe detection
@@ -65,6 +106,32 @@ export function AppLayout({ children, title }: AppLayoutProps) {
     queryKey: ['overdueCount'],
     queryFn: fetchOverdueCount,
     refetchInterval: 60000, // Refresh every minute
+  });
+
+  const createListMutation = useMutation({
+    mutationFn: createList,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['lists'] });
+      setCreateListOpen(false);
+      setNewListName('');
+      toast.success('List created');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const createLabelMutation = useMutation({
+    mutationFn: createLabel,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['labels'] });
+      setCreateLabelOpen(false);
+      setNewLabelName('');
+      toast.success('Label created');
+    },
+    onError: (error: Error) => {
+      toast.error(error.message);
+    },
   });
 
   // Close mobile menu on route change
@@ -137,6 +204,28 @@ export function AppLayout({ children, title }: AppLayoutProps) {
     }
   };
 
+  const handleCreateList = (): void => {
+    setCreateListOpen(true);
+  };
+
+  const handleCreateLabel = (): void => {
+    setCreateLabelOpen(true);
+  };
+
+  const handleSubmitList = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (newListName.trim()) {
+      createListMutation.mutate({ name: newListName.trim() });
+    }
+  };
+
+  const handleSubmitLabel = (e: React.FormEvent): void => {
+    e.preventDefault();
+    if (newLabelName.trim()) {
+      createLabelMutation.mutate({ name: newLabelName.trim() });
+    }
+  };
+
   const sidebarLoading = listsLoading || labelsLoading;
 
   return (
@@ -153,6 +242,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
               overdueCount={overdueCount}
               collapsed={sidebarCollapsed}
               onToggleCollapse={handleToggleSidebar}
+              onCreateList={handleCreateList}
+              onCreateLabel={handleCreateLabel}
             />
           )}
         </div>
@@ -194,6 +285,8 @@ export function AppLayout({ children, title }: AppLayoutProps) {
                     overdueCount={overdueCount}
                     collapsed={false}
                     onToggleCollapse={handleCloseMobileMenu}
+                    onCreateList={handleCreateList}
+                    onCreateLabel={handleCreateLabel}
                     isMobile
                   />
                 )}
@@ -212,6 +305,70 @@ export function AppLayout({ children, title }: AppLayoutProps) {
             {children}
           </ErrorBoundary>
         </MainPanel>
+
+        {/* Create List Dialog */}
+        <Dialog open={createListOpen} onOpenChange={setCreateListOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create List</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmitList}>
+              <Input
+                placeholder="List name"
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                autoFocus
+              />
+              <DialogFooter className="mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateListOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!newListName.trim() || createListMutation.isPending}
+                >
+                  {createListMutation.isPending ? 'Creating...' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Label Dialog */}
+        <Dialog open={createLabelOpen} onOpenChange={setCreateLabelOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Create Label</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleSubmitLabel}>
+              <Input
+                placeholder="Label name"
+                value={newLabelName}
+                onChange={(e) => setNewLabelName(e.target.value)}
+                autoFocus
+              />
+              <DialogFooter className="mt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setCreateLabelOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!newLabelName.trim() || createLabelMutation.isPending}
+                >
+                  {createLabelMutation.isPending ? 'Creating...' : 'Create'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
     </ErrorBoundary>
   );

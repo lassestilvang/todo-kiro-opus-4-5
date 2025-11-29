@@ -129,7 +129,7 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed: undefined }),
+    body: JSON.stringify({ toggleComplete: true }),
   });
   if (!res.ok) throw new Error('Failed to toggle task');
   return res.json();
@@ -460,6 +460,9 @@ export default function ListDetailPage(): React.ReactElement {
       {/* Task Detail Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Task Details</DialogTitle>
+          </DialogHeader>
           {selectedTask && (
             <TaskDetail
               task={selectedTask}

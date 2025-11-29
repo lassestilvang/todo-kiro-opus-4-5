@@ -43,7 +43,7 @@ export async function GET(
 
 /**
  * PUT /api/tasks/[id]
- * Updates a task
+ * Updates a task or toggles completion status
  */
 export async function PUT(
   request: NextRequest,
@@ -52,6 +52,12 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await request.json();
+
+    // Handle toggle complete request
+    if (body.toggleComplete === true) {
+      const task = await taskService.toggleComplete(id);
+      return NextResponse.json(task);
+    }
 
     // Parse dates if provided as strings, handle null values
     const data: UpdateTaskInput = {

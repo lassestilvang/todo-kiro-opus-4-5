@@ -22,30 +22,30 @@
     - Add required components: Button, Input, Dialog, Popover, Calendar, Select, Checkbox, Badge, Toast
     - _Requirements: 19.1, 19.2_
 
-- [-] 2. Database Schema and Core Types
-  - [ ] 2.1 Create TypeScript type definitions
+- [x] 2. Database Schema and Core Types
+  - [x] 2.1 Create TypeScript type definitions
     - Define all interfaces in src/types/index.ts (Task, List, Label, Subtask, etc.)
     - Define service interfaces
     - _Requirements: 3.1, 3.2_
-  - [ ] 2.2 Implement Drizzle schema
+  - [x] 2.2 Implement Drizzle schema
     - Create schema for lists, tasks, subtasks, labels, taskLabels, attachments, reminders, taskHistory
     - Set up foreign key relationships and cascade deletes
     - _Requirements: 23.1_
-  - [ ] 2.3 Create and run initial migration
+  - [x] 2.3 Create and run initial migration
     - Generate migration from schema
     - Create seed script for Inbox list
     - _Requirements: 1.1_
-  - [ ] 2.4 Write property test for schema constraints
+  - [x] 2.4 Write property test for schema constraints
     - **Property 36: Data Persistence Round Trip**
     - **Validates: Requirements 23.1, 23.2**
 
-- [ ] 3. Validation Utilities
-  - [ ] 3.1 Implement validation functions
+- [x] 3. Validation Utilities
+  - [x] 3.1 Implement validation functions
     - Create task validation (name required, priority enum, time format)
     - Create list validation (name required)
     - Create label validation (name required)
     - _Requirements: 3.3, 4.4, 24.1_
-  - [ ] 3.2 Write property tests for validation
+  - [x] 3.2 Write property tests for validation
     - **Property 7: Task Name Validation and Priority Default**
     - **Property 8: Task Validation Rejection**
     - **Property 14: Time Format Validation**
@@ -53,14 +53,14 @@
     - **Property 18: Priority Enum Validation**
     - **Validates: Requirements 3.1, 3.3, 4.4, 7.1, 7.2, 8.1, 9.1, 9.3, 24.1**
 
-- [ ] 4. List Service Implementation
-  - [ ] 4.1 Implement List service
+- [x] 4. List Service Implementation
+  - [x] 4.1 Implement List service
     - Create ensureInboxExists() for initialization
     - Implement create(), update(), delete(), getAll(), getInbox()
     - Ensure Inbox cannot be deleted or renamed
     - Implement task migration on list deletion
     - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
-  - [ ] 4.2 Write property tests for List service
+  - [x] 4.2 Write property tests for List service
     - **Property 1: Inbox Immutability**
     - **Property 3: Inbox First Ordering**
     - **Property 4: List Name Validation**
@@ -68,7 +68,7 @@
     - **Property 6: List Deletion Task Migration**
     - **Validates: Requirements 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 18.1**
 
-- [ ] 5. Checkpoint - Ensure all tests pass
+- [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Label Service Implementation

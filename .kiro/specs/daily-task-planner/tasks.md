@@ -71,52 +71,52 @@
 - [x] 5. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 6. Label Service Implementation
-  - [ ] 6.1 Implement Label service
+- [x] 6. Label Service Implementation
+  - [x] 6.1 Implement Label service
     - Implement create(), update(), delete(), getAll()
     - Implement addToTask(), removeFromTask()
     - Handle cascade removal when label is deleted
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
-  - [ ] 6.2 Write property tests for Label service
+  - [x] 6.2 Write property tests for Label service
     - **Property 16: Multiple Label Assignment**
     - **Property 17: Label Cascade Removal**
     - **Validates: Requirements 8.2, 8.4**
 
-- [ ] 7. Task Service Implementation
-  - [ ] 7.1 Implement core Task service methods
+- [x] 7. Task Service Implementation
+  - [x] 7.1 Implement core Task service methods
     - Implement create() with default priority and Inbox assignment
     - Implement update() with validation
     - Implement delete() with cascade
     - Implement getById(), getByListId(), getAll()
     - _Requirements: 1.2, 3.1, 3.2, 4.1, 4.2, 4.3_
-  - [ ] 7.2 Write property tests for core Task operations
+  - [x] 7.2 Write property tests for core Task operations
     - **Property 2: Default List Assignment**
     - **Validates: Requirements 1.2**
-  - [ ] 7.3 Implement Task history logging
+  - [x] 7.3 Implement Task history logging
     - Create logHistory() helper
     - Log all property changes with previous/new values
     - Implement getHistory() ordered by timestamp desc
     - _Requirements: 3.4, 4.1, 5.1, 5.2, 5.3_
-  - [ ] 7.4 Write property tests for Task history
+  - [x] 7.4 Write property tests for Task history
     - **Property 9: Task History Logging**
     - **Property 10: Task History Ordering**
     - **Validates: Requirements 3.4, 4.1, 5.2, 5.3, 22.1, 22.2**
-  - [ ] 7.5 Implement Subtask management
+  - [x] 7.5 Implement Subtask management
     - Implement addSubtask(), toggleSubtask(), deleteSubtask()
     - Implement getSubtasks() for a task
     - Ensure cascade delete with parent
     - _Requirements: 6.1, 6.2, 6.3, 6.4_
-  - [ ] 7.6 Write property tests for Subtasks
+  - [x] 7.6 Write property tests for Subtasks
     - **Property 11: Subtask Parent Association**
     - **Property 12: Subtask Completion Independence**
     - **Property 13: Subtask Cascade Delete**
     - **Validates: Requirements 6.1, 6.3, 6.4**
-  - [ ] 7.7 Implement Task completion
+  - [x] 7.7 Implement Task completion
     - Implement toggleComplete() with history logging
     - Handle recurring task next occurrence creation
     - _Requirements: 22.1, 22.2, 10.2_
 
-- [ ] 8. Checkpoint - Ensure all tests pass
+- [x] 8. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 9. Recurrence Utilities

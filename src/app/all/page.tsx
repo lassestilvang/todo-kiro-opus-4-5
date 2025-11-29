@@ -2,8 +2,7 @@
 
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Plus, CalendarDays } from 'lucide-react';
+import { Plus, ListTodo } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { TaskList, TaskDetail, TaskForm } from '@/components/tasks';
 import { Button } from '@/components/ui/button';
@@ -41,11 +40,11 @@ function parseTaskDates(task: Task): Task {
 }
 
 /**
- * Fetches today's tasks from the API
+ * Fetches all tasks from the API
  */
-async function fetchTodayTasks(includeCompleted: boolean): Promise<Task[]> {
-  const res = await fetch(`/api/tasks/today?includeCompleted=${includeCompleted}`);
-  if (!res.ok) throw new Error('Failed to fetch today\'s tasks');
+async function fetchAllTasks(includeCompleted: boolean): Promise<Task[]> {
+  const res = await fetch(`/api/tasks?includeCompleted=${includeCompleted}`);
+  if (!res.ok) throw new Error('Failed to fetch tasks');
   const data = await res.json();
   return data.map(parseTaskDates);
 }
@@ -88,7 +87,7 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed: undefined }), // Toggle is handled server-side
+    body: JSON.stringify({ completed: undefined }),
   });
   if (!res.ok) throw new Error('Failed to toggle task');
   return res.json();
@@ -131,24 +130,22 @@ async function deleteTask(taskId: string): Promise<void> {
 }
 
 /**
- * Today Page Component
- * Displays tasks scheduled for today with show/hide completed toggle.
+ * All Tasks Page Component
+ * Displays all tasks including scheduled and unscheduled.
+ * Distinguishes between scheduled and unscheduled tasks.
  * 
- * Requirements: 12.1, 12.2, 12.3
+ * Requirements: 15.1, 15.2, 15.3
  */
-export default function TodayPage(): React.ReactElement {
+export default function AllPage(): React.ReactElement {
   const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = React.useState(true);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
-  const today = new Date();
-  const formattedDate = format(today, 'EEEE, MMMM d');
-
-  // Fetch today's tasks
+  // Fetch all tasks
   const { data: tasks = [], isLoading, error } = useQuery({
-    queryKey: ['tasks', 'today', showCompleted],
-    queryFn: () => fetchTodayTasks(showCompleted),
+    queryKey: ['tasks', 'all', showCompleted],
+    queryFn: () => fetchAllTasks(showCompleted),
   });
 
   // Fetch lists and labels for forms
@@ -168,6 +165,10 @@ export default function TodayPage(): React.ReactElement {
     queryFn: () => selectedTask ? fetchTaskHistory(selectedTask.id) : Promise.resolve([]),
     enabled: !!selectedTask,
   });
+
+  // Separate scheduled and unscheduled tasks
+  const scheduledTasks = tasks.filter(task => task.date);
+  const unscheduledTasks = tasks.filter(task => !task.date);
 
   // Toggle complete mutation
   const toggleCompleteMutation = useMutation({
@@ -234,12 +235,7 @@ export default function TodayPage(): React.ReactElement {
   };
 
   const handleCreateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
-    // Set today's date for new tasks created from this view
-    const taskData: CreateTaskInput = {
-      ...(data as CreateTaskInput),
-      date: today,
-    };
-    createTaskMutation.mutate(taskData);
+    createTaskMutation.mutate(data as CreateTaskInput);
   };
 
   const handleUpdateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
@@ -262,7 +258,7 @@ export default function TodayPage(): React.ReactElement {
 
   if (error) {
     return (
-      <AppLayout title="Today">
+      <AppLayout title="All Tasks">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-destructive">Failed to load tasks. Please try again.</p>
         </div>
@@ -271,16 +267,18 @@ export default function TodayPage(): React.ReactElement {
   }
 
   return (
-    <AppLayout title="Today">
+    <AppLayout title="All Tasks">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <CalendarDays className="h-6 w-6" />
-              Today
+              <ListTodo className="h-6 w-6" />
+              All Tasks
             </h1>
-            <p className="text-sm text-muted-foreground">{formattedDate}</p>
+            <p className="text-sm text-muted-foreground">
+              {tasks.length} task{tasks.length !== 1 ? 's' : ''} total
+            </p>
           </div>
           <Button onClick={() => setIsFormOpen(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
@@ -288,7 +286,7 @@ export default function TodayPage(): React.ReactElement {
           </Button>
         </div>
 
-        {/* Task List */}
+        {/* Loading State */}
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -298,15 +296,47 @@ export default function TodayPage(): React.ReactElement {
               />
             ))}
           </div>
+        ) : tasks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground">No tasks yet. Create your first task!</p>
+          </div>
         ) : (
-          <TaskList
-            tasks={tasks}
-            onTaskClick={handleTaskClick}
-            onToggleComplete={handleToggleComplete}
-            showCompleted={showCompleted}
-            onToggleShowCompleted={handleToggleShowCompleted}
-            emptyMessage="No tasks scheduled for today. Add a task to get started!"
-          />
+          <div className="space-y-8">
+            {/* Scheduled Tasks Section */}
+            {scheduledTasks.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-muted-foreground">
+                  Scheduled ({scheduledTasks.length})
+                </h2>
+                <TaskList
+                  tasks={scheduledTasks}
+                  onTaskClick={handleTaskClick}
+                  onToggleComplete={handleToggleComplete}
+                  showCompleted={showCompleted}
+                  onToggleShowCompleted={handleToggleShowCompleted}
+                  groupByDate={true}
+                  emptyMessage="No scheduled tasks."
+                />
+              </div>
+            )}
+
+            {/* Unscheduled Tasks Section */}
+            {unscheduledTasks.length > 0 && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-muted-foreground">
+                  Unscheduled ({unscheduledTasks.length})
+                </h2>
+                <TaskList
+                  tasks={unscheduledTasks}
+                  onTaskClick={handleTaskClick}
+                  onToggleComplete={handleToggleComplete}
+                  showCompleted={showCompleted}
+                  onToggleShowCompleted={scheduledTasks.length === 0 ? handleToggleShowCompleted : undefined}
+                  emptyMessage="No unscheduled tasks."
+                />
+              </div>
+            )}
+          </div>
         )}
       </div>
 

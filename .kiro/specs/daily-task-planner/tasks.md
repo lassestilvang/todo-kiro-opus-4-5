@@ -303,49 +303,49 @@
     - Confirmation before task creation
     - _Requirements: 28.1, 28.4_
 
-- [ ] 22. Common Components
-  - [ ] 22.1 Implement DatePicker component
+- [x] 22. Common Components
+  - [x] 22.1 Implement DatePicker component
     - Calendar-based selection
     - Highlight current and selected dates
     - _Requirements: 26.1, 26.2, 26.3_
-  - [ ] 22.2 Implement PrioritySelector component
+  - [x] 22.2 Implement PrioritySelector component
     - Visual priority indicators
     - _Requirements: 9.1, 9.2_
-  - [ ] 22.3 Implement RecurrenceSelector component
+  - [x] 22.3 Implement RecurrenceSelector component
     - Preset patterns and custom configuration
     - Human-readable preview
     - _Requirements: 10.1, 10.3, 10.4_
-  - [ ] 22.4 Implement SearchBar component
+  - [x] 22.4 Implement SearchBar component
     - Fuzzy search input
     - Results dropdown
     - _Requirements: 17.1, 17.4_
-  - [ ] 22.5 Implement EmojiPicker and ColorPicker
+  - [x] 22.5 Implement EmojiPicker and ColorPicker
     - For list customization
     - _Requirements: 2.1, 2.4_
 
-- [ ] 23. View Pages
-  - [ ] 23.1 Implement Today page
+- [x] 23. View Pages
+  - [x] 23.1 Implement Today page
     - Fetch and display today's tasks
     - Completed toggle
     - _Requirements: 12.1, 12.2, 12.3_
-  - [ ] 23.2 Implement Next 7 Days page
+  - [x] 23.2 Implement Next 7 Days page
     - Fetch and display week's tasks grouped by date
     - Completed toggle
     - _Requirements: 13.1, 13.2, 13.3_
-  - [ ] 23.3 Implement Upcoming page
+  - [x] 23.3 Implement Upcoming page
     - Fetch and display future tasks grouped by period
     - Completed toggle
     - _Requirements: 14.1, 14.2, 14.3_
-  - [ ] 23.4 Implement All page
+  - [x] 23.4 Implement All page
     - Fetch and display all tasks
     - Distinguish scheduled vs unscheduled
     - Completed toggle
     - _Requirements: 15.1, 15.2, 15.3_
-  - [ ] 23.5 Implement List detail page
+  - [x] 23.5 Implement List detail page
     - Display tasks for specific list
     - List management (edit, delete)
     - _Requirements: 2.2, 2.3_
-  - [ ] 23.6 Implement Search results page
+  - [x] 23.6 Implement Search results page
     - Display search results ranked by relevance
     - _Requirements: 17.2_
 

@@ -2,8 +2,7 @@
 
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Plus, CalendarDays } from 'lucide-react';
+import { Plus, CalendarRange } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { TaskList, TaskDetail, TaskForm } from '@/components/tasks';
 import { Button } from '@/components/ui/button';
@@ -41,11 +40,11 @@ function parseTaskDates(task: Task): Task {
 }
 
 /**
- * Fetches today's tasks from the API
+ * Fetches upcoming tasks from the API
  */
-async function fetchTodayTasks(includeCompleted: boolean): Promise<Task[]> {
-  const res = await fetch(`/api/tasks/today?includeCompleted=${includeCompleted}`);
-  if (!res.ok) throw new Error('Failed to fetch today\'s tasks');
+async function fetchUpcomingTasks(includeCompleted: boolean): Promise<Task[]> {
+  const res = await fetch(`/api/tasks/upcoming?includeCompleted=${includeCompleted}`);
+  if (!res.ok) throw new Error('Failed to fetch upcoming tasks');
   const data = await res.json();
   return data.map(parseTaskDates);
 }
@@ -88,7 +87,7 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed: undefined }), // Toggle is handled server-side
+    body: JSON.stringify({ completed: undefined }),
   });
   if (!res.ok) throw new Error('Failed to toggle task');
   return res.json();
@@ -131,24 +130,21 @@ async function deleteTask(taskId: string): Promise<void> {
 }
 
 /**
- * Today Page Component
- * Displays tasks scheduled for today with show/hide completed toggle.
+ * Upcoming Page Component
+ * Displays all future scheduled tasks grouped by date/period.
  * 
- * Requirements: 12.1, 12.2, 12.3
+ * Requirements: 14.1, 14.2, 14.3
  */
-export default function TodayPage(): React.ReactElement {
+export default function UpcomingPage(): React.ReactElement {
   const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = React.useState(true);
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
   const [isFormOpen, setIsFormOpen] = React.useState(false);
 
-  const today = new Date();
-  const formattedDate = format(today, 'EEEE, MMMM d');
-
-  // Fetch today's tasks
+  // Fetch upcoming tasks
   const { data: tasks = [], isLoading, error } = useQuery({
-    queryKey: ['tasks', 'today', showCompleted],
-    queryFn: () => fetchTodayTasks(showCompleted),
+    queryKey: ['tasks', 'upcoming', showCompleted],
+    queryFn: () => fetchUpcomingTasks(showCompleted),
   });
 
   // Fetch lists and labels for forms
@@ -234,12 +230,7 @@ export default function TodayPage(): React.ReactElement {
   };
 
   const handleCreateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
-    // Set today's date for new tasks created from this view
-    const taskData: CreateTaskInput = {
-      ...(data as CreateTaskInput),
-      date: today,
-    };
-    createTaskMutation.mutate(taskData);
+    createTaskMutation.mutate(data as CreateTaskInput);
   };
 
   const handleUpdateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
@@ -262,7 +253,7 @@ export default function TodayPage(): React.ReactElement {
 
   if (error) {
     return (
-      <AppLayout title="Today">
+      <AppLayout title="Upcoming">
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <p className="text-destructive">Failed to load tasks. Please try again.</p>
         </div>
@@ -271,16 +262,16 @@ export default function TodayPage(): React.ReactElement {
   }
 
   return (
-    <AppLayout title="Today">
+    <AppLayout title="Upcoming">
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="space-y-1">
             <h1 className="text-2xl font-bold flex items-center gap-2">
-              <CalendarDays className="h-6 w-6" />
-              Today
+              <CalendarRange className="h-6 w-6" />
+              Upcoming
             </h1>
-            <p className="text-sm text-muted-foreground">{formattedDate}</p>
+            <p className="text-sm text-muted-foreground">All future scheduled tasks</p>
           </div>
           <Button onClick={() => setIsFormOpen(true)} size="sm">
             <Plus className="h-4 w-4 mr-2" />
@@ -288,7 +279,7 @@ export default function TodayPage(): React.ReactElement {
           </Button>
         </div>
 
-        {/* Task List */}
+        {/* Task List - grouped by date */}
         {isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
@@ -305,7 +296,8 @@ export default function TodayPage(): React.ReactElement {
             onToggleComplete={handleToggleComplete}
             showCompleted={showCompleted}
             onToggleShowCompleted={handleToggleShowCompleted}
-            emptyMessage="No tasks scheduled for today. Add a task to get started!"
+            groupByDate={true}
+            emptyMessage="No upcoming tasks scheduled."
           />
         )}
       </div>

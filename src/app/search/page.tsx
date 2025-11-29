@@ -1,17 +1,14 @@
 'use client';
 
 import * as React from 'react';
+import { useSearchParams } from 'next/navigation';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { format } from 'date-fns';
-import { Plus, CalendarDays } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
-import { TaskList, TaskDetail, TaskForm } from '@/components/tasks';
-import { Button } from '@/components/ui/button';
+import { TaskList, TaskDetail } from '@/components/tasks';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput } from '@/types';
@@ -41,11 +38,12 @@ function parseTaskDates(task: Task): Task {
 }
 
 /**
- * Fetches today's tasks from the API
+ * Searches tasks using the search API
  */
-async function fetchTodayTasks(includeCompleted: boolean): Promise<Task[]> {
-  const res = await fetch(`/api/tasks/today?includeCompleted=${includeCompleted}`);
-  if (!res.ok) throw new Error('Failed to fetch today\'s tasks');
+async function searchTasks(query: string): Promise<Task[]> {
+  if (!query.trim()) return [];
+  const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+  if (!res.ok) throw new Error('Failed to search tasks');
   const data = await res.json();
   return data.map(parseTaskDates);
 }
@@ -88,22 +86,9 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ completed: undefined }), // Toggle is handled server-side
+    body: JSON.stringify({ completed: undefined }),
   });
   if (!res.ok) throw new Error('Failed to toggle task');
-  return res.json();
-}
-
-/**
- * Creates a new task
- */
-async function createTask(data: CreateTaskInput): Promise<Task> {
-  const res = await fetch('/api/tasks', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) throw new Error('Failed to create task');
   return res.json();
 }
 
@@ -131,24 +116,23 @@ async function deleteTask(taskId: string): Promise<void> {
 }
 
 /**
- * Today Page Component
- * Displays tasks scheduled for today with show/hide completed toggle.
+ * Search Results Page Component
+ * Displays search results ranked by relevance.
  * 
- * Requirements: 12.1, 12.2, 12.3
+ * Requirements: 17.2
  */
-export default function TodayPage(): React.ReactElement {
+export default function SearchPage(): React.ReactElement {
+  const searchParams = useSearchParams();
   const queryClient = useQueryClient();
-  const [showCompleted, setShowCompleted] = React.useState(true);
+  const query = searchParams.get('q') ?? '';
+
   const [selectedTask, setSelectedTask] = React.useState<Task | null>(null);
-  const [isFormOpen, setIsFormOpen] = React.useState(false);
 
-  const today = new Date();
-  const formattedDate = format(today, 'EEEE, MMMM d');
-
-  // Fetch today's tasks
+  // Search tasks
   const { data: tasks = [], isLoading, error } = useQuery({
-    queryKey: ['tasks', 'today', showCompleted],
-    queryFn: () => fetchTodayTasks(showCompleted),
+    queryKey: ['search', query],
+    queryFn: () => searchTasks(query),
+    enabled: query.length > 0,
   });
 
   // Fetch lists and labels for forms
@@ -174,23 +158,11 @@ export default function TodayPage(): React.ReactElement {
     mutationFn: toggleTaskComplete,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
     },
     onError: () => {
       toast.error('Failed to update task');
-    },
-  });
-
-  // Create task mutation
-  const createTaskMutation = useMutation({
-    mutationFn: createTask,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-      setIsFormOpen(false);
-      toast.success('Task created');
-    },
-    onError: () => {
-      toast.error('Failed to create task');
     },
   });
 
@@ -199,6 +171,7 @@ export default function TodayPage(): React.ReactElement {
     mutationFn: updateTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
       setSelectedTask(null);
       toast.success('Task updated');
     },
@@ -212,6 +185,7 @@ export default function TodayPage(): React.ReactElement {
     mutationFn: deleteTask,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['search'] });
       queryClient.invalidateQueries({ queryKey: ['overdueCount'] });
       setSelectedTask(null);
       toast.success('Task deleted');
@@ -227,19 +201,6 @@ export default function TodayPage(): React.ReactElement {
 
   const handleTaskClick = (task: Task): void => {
     setSelectedTask(task);
-  };
-
-  const handleToggleShowCompleted = (): void => {
-    setShowCompleted(!showCompleted);
-  };
-
-  const handleCreateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
-    // Set today's date for new tasks created from this view
-    const taskData: CreateTaskInput = {
-      ...(data as CreateTaskInput),
-      date: today,
-    };
-    createTaskMutation.mutate(taskData);
   };
 
   const handleUpdateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
@@ -262,34 +223,37 @@ export default function TodayPage(): React.ReactElement {
 
   if (error) {
     return (
-      <AppLayout title="Today">
+      <AppLayout title="Search">
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <p className="text-destructive">Failed to load tasks. Please try again.</p>
+          <p className="text-destructive">Search failed. Please try again.</p>
         </div>
       </AppLayout>
     );
   }
 
   return (
-    <AppLayout title="Today">
+    <AppLayout title="Search">
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <CalendarDays className="h-6 w-6" />
-              Today
-            </h1>
-            <p className="text-sm text-muted-foreground">{formattedDate}</p>
-          </div>
-          <Button onClick={() => setIsFormOpen(true)} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Task
-          </Button>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Search className="h-6 w-6" />
+            Search Results
+          </h1>
+          {query && (
+            <p className="text-sm text-muted-foreground">
+              {isLoading ? 'Searching...' : `${tasks.length} result${tasks.length !== 1 ? 's' : ''} for "${query}"`}
+            </p>
+          )}
         </div>
 
-        {/* Task List */}
-        {isLoading ? (
+        {/* Results */}
+        {!query ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <Search className="h-12 w-12 text-muted-foreground mb-4" />
+            <p className="text-muted-foreground">Enter a search term to find tasks.</p>
+          </div>
+        ) : isLoading ? (
           <div className="space-y-2">
             {[1, 2, 3].map((i) => (
               <div
@@ -298,14 +262,17 @@ export default function TodayPage(): React.ReactElement {
               />
             ))}
           </div>
+        ) : tasks.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-muted-foreground">No tasks found matching &quot;{query}&quot;.</p>
+          </div>
         ) : (
           <TaskList
             tasks={tasks}
             onTaskClick={handleTaskClick}
             onToggleComplete={handleToggleComplete}
-            showCompleted={showCompleted}
-            onToggleShowCompleted={handleToggleShowCompleted}
-            emptyMessage="No tasks scheduled for today. Add a task to get started!"
+            showCompleted={true}
+            emptyMessage="No results found."
           />
         )}
       </div>
@@ -324,21 +291,6 @@ export default function TodayPage(): React.ReactElement {
               onToggleComplete={handleToggleSelectedTaskComplete}
             />
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Task Dialog */}
-      <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
-          </DialogHeader>
-          <TaskForm
-            lists={lists}
-            labels={labels}
-            onSubmit={handleCreateTask}
-            onCancel={() => setIsFormOpen(false)}
-          />
         </DialogContent>
       </Dialog>
     </AppLayout>

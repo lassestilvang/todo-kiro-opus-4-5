@@ -4,19 +4,19 @@ inclusion: always
 
 # Daily Task Planner — Product Rules
 
-Task management app: organize tasks into lists, apply labels, set priorities/deadlines, track time.
+Task management app for organizing tasks into lists with labels, priorities, deadlines, and time tracking.
 
-## Domain Entities
+## Domain Model
 
-| Entity | Key Fields | Notes |
-|--------|------------|-------|
-| Task | name, description, date, deadline, estimate, actualTime, priority, recurrence | Core entity; times in minutes |
-| List | name | "Inbox" is immutable default |
-| Label | name, icon? | Cross-list categorization |
-| Subtask | name, completed | Cascade-deleted with parent |
-| Reminder | offsetMinutes, method | method: `'push' \| 'email' \| 'in-app'` |
+| Entity | Required Fields | Optional Fields | Notes |
+|--------|-----------------|-----------------|-------|
+| Task | name | description, date, deadline, estimate, actualTime, priority, recurrence, listId | Times in minutes; defaults to Inbox if no listId |
+| List | name | — | "Inbox" is system-reserved |
+| Label | name | icon | For cross-list categorization |
+| Subtask | name, taskId | completed | Cascade-deleted with parent task |
+| Reminder | taskId, offsetMinutes, method | — | method: `'push' \| 'email' \| 'in-app'` |
 
-## Enums
+## Type Definitions
 
 ```typescript
 type Priority = 'high' | 'medium' | 'low' | 'none'; // default: 'none'
@@ -24,48 +24,67 @@ type Recurrence = 'daily' | 'weekly' | 'weekday' | 'monthly' | 'yearly' | 'custo
 type ReminderMethod = 'push' | 'email' | 'in-app';
 ```
 
-## Business Rules (MUST enforce)
+## Critical Business Rules
 
-### Inbox Behavior
-- Inbox list always exists, appears first in UI
-- Cannot delete or rename Inbox
-- Tasks without listId default to Inbox
-- Deleting any other list moves its tasks to Inbox
+These rules MUST be enforced in all service and API implementations:
 
-### Cascade Deletes
-- Task deletion → removes subtasks, attachments, reminders, history
-- Label deletion → removes label from all tasks (not the tasks themselves)
+### Inbox Protection
+- Inbox list MUST always exist and appear first in UI
+- NEVER allow deletion or renaming of Inbox
+- Tasks without explicit listId MUST default to Inbox
+- When deleting a list, move all its tasks to Inbox before deletion
 
-### Task Completion
-- Completing all subtasks does NOT auto-complete parent
-- Completing recurring task → create next occurrence based on pattern
+### Cascade Operations
+- Deleting a Task → delete all subtasks, attachments, reminders, history entries
+- Deleting a Label → remove label association from tasks (preserve the tasks)
+- Deleting a List → move tasks to Inbox, then delete list
+
+### Task Completion Logic
+- Completing all subtasks does NOT auto-complete the parent task
+- Completing a recurring task → generate next occurrence based on recurrence pattern
+- Mark original as completed, create new task with updated date
 
 ### History Tracking
-- Log all task modifications: `{ field, oldValue, newValue, timestamp }`
+- Log every task field modification with: `{ field, oldValue, newValue, timestamp }`
+- Do NOT log initial creation or deletion events
 
-## Views
+## View Definitions
 
-| View | Filter Logic |
-|------|--------------|
-| Today | `date === today` |
-| Next 7 Days | `today <= date <= today + 7`, grouped by date |
-| Upcoming | `date >= today`, grouped by date/period |
-| All | All tasks (scheduled + unscheduled) |
+| View | Route | Filter | Grouping |
+|------|-------|--------|----------|
+| Today | `/today` | `date === today` | None |
+| Next 7 Days | `/next-7-days` | `today <= date <= today + 7` | By date |
+| Upcoming | `/upcoming` | `date >= today` | By date/period |
+| All | `/all` | None (all tasks) | None |
+| List | `/list/[listId]` | `listId === param` | None |
 
-All views support show/hide completed toggle.
+All views MUST support a show/hide completed toggle.
 
-## Validation
+## Validation Rules
 
-- Names (task/list/label): required, non-empty after trim
-- Priority: must match enum
-- Time fields: integer minutes
-- Reminder offsetMinutes: positive integer
+Apply these validations in services before database operations:
 
-## Feature Implementations
+| Field | Rule | Error Message |
+|-------|------|---------------|
+| Task/List/Label name | Non-empty after `.trim()` | "Name is required" |
+| Priority | Must be valid enum value | "Invalid priority" |
+| estimate, actualTime | Integer >= 0 | "Time must be a positive integer" |
+| Reminder offsetMinutes | Integer > 0 | "Offset must be a positive integer" |
+| Recurrence | Must be valid enum value or null | "Invalid recurrence pattern" |
 
-| Feature | Implementation |
-|---------|----------------|
-| Search | fuse.js fuzzy search on name, description, labels |
-| NLP input | chrono-node for date parsing |
-| Overdue detection | `!completed && deadline < now` |
-| Theme | next-themes, system preference default |
+## Feature Implementation Notes
+
+| Feature | Library | Usage Pattern |
+|---------|---------|---------------|
+| Search | fuse.js | Fuzzy search on task name, description, and label names |
+| NLP Input | chrono-node | Parse natural language dates from user input |
+| Overdue | date-fns | Task is overdue when `!completed && deadline && deadline < now` |
+| Theme | next-themes | Default to system preference |
+
+## Common Pitfalls to Avoid
+
+- Do not allow empty task names (check after trim)
+- Do not delete Inbox under any circumstances
+- Do not auto-complete parent tasks when subtasks complete
+- Do not forget to cascade delete related entities
+- Do not create duplicate recurring task instances

@@ -1,0 +1,396 @@
+# Implementation Plan
+
+- [x] 1. Project Setup and Configuration
+  - [x] 1.1 Initialize Next.js 16 project with Bun
+    - Run `bun create next-app` with TypeScript, Tailwind CSS, App Router
+    - Configure strict TypeScript in tsconfig.json
+    - Set up path aliases (@/components, @/lib, etc.)
+    - _Requirements: Technical requirements_
+  - [x] 1.2 Install and configure dependencies
+    - Install shadcn/ui, Framer Motion, Drizzle ORM, better-sqlite3
+    - Install fast-check for property-based testing
+    - Install date-fns for date manipulation
+    - Install fuse.js for fuzzy search
+    - Install chrono-node for natural language date parsing
+    - _Requirements: Technical requirements_
+  - [x] 1.3 Set up Drizzle ORM with SQLite
+    - Create drizzle.config.ts
+    - Set up database connection in lib/db/index.ts
+    - _Requirements: 23.1, 23.2_
+  - [x] 1.4 Configure shadcn/ui components
+    - Initialize shadcn/ui with dark mode support
+    - Add required components: Button, Input, Dialog, Popover, Calendar, Select, Checkbox, Badge, Toast
+    - _Requirements: 19.1, 19.2_
+
+- [-] 2. Database Schema and Core Types
+  - [ ] 2.1 Create TypeScript type definitions
+    - Define all interfaces in src/types/index.ts (Task, List, Label, Subtask, etc.)
+    - Define service interfaces
+    - _Requirements: 3.1, 3.2_
+  - [ ] 2.2 Implement Drizzle schema
+    - Create schema for lists, tasks, subtasks, labels, taskLabels, attachments, reminders, taskHistory
+    - Set up foreign key relationships and cascade deletes
+    - _Requirements: 23.1_
+  - [ ] 2.3 Create and run initial migration
+    - Generate migration from schema
+    - Create seed script for Inbox list
+    - _Requirements: 1.1_
+  - [ ] 2.4 Write property test for schema constraints
+    - **Property 36: Data Persistence Round Trip**
+    - **Validates: Requirements 23.1, 23.2**
+
+- [ ] 3. Validation Utilities
+  - [ ] 3.1 Implement validation functions
+    - Create task validation (name required, priority enum, time format)
+    - Create list validation (name required)
+    - Create label validation (name required)
+    - _Requirements: 3.3, 4.4, 24.1_
+  - [ ] 3.2 Write property tests for validation
+    - **Property 7: Task Name Validation and Priority Default**
+    - **Property 8: Task Validation Rejection**
+    - **Property 14: Time Format Validation**
+    - **Property 15: Label Name Validation**
+    - **Property 18: Priority Enum Validation**
+    - **Validates: Requirements 3.1, 3.3, 4.4, 7.1, 7.2, 8.1, 9.1, 9.3, 24.1**
+
+- [ ] 4. List Service Implementation
+  - [ ] 4.1 Implement List service
+    - Create ensureInboxExists() for initialization
+    - Implement create(), update(), delete(), getAll(), getInbox()
+    - Ensure Inbox cannot be deleted or renamed
+    - Implement task migration on list deletion
+    - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4_
+  - [ ] 4.2 Write property tests for List service
+    - **Property 1: Inbox Immutability**
+    - **Property 3: Inbox First Ordering**
+    - **Property 4: List Name Validation**
+    - **Property 5: List Update Persistence**
+    - **Property 6: List Deletion Task Migration**
+    - **Validates: Requirements 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 18.1**
+
+- [ ] 5. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 6. Label Service Implementation
+  - [ ] 6.1 Implement Label service
+    - Implement create(), update(), delete(), getAll()
+    - Implement addToTask(), removeFromTask()
+    - Handle cascade removal when label is deleted
+    - _Requirements: 8.1, 8.2, 8.3, 8.4_
+  - [ ] 6.2 Write property tests for Label service
+    - **Property 16: Multiple Label Assignment**
+    - **Property 17: Label Cascade Removal**
+    - **Validates: Requirements 8.2, 8.4**
+
+- [ ] 7. Task Service Implementation
+  - [ ] 7.1 Implement core Task service methods
+    - Implement create() with default priority and Inbox assignment
+    - Implement update() with validation
+    - Implement delete() with cascade
+    - Implement getById(), getByListId(), getAll()
+    - _Requirements: 1.2, 3.1, 3.2, 4.1, 4.2, 4.3_
+  - [ ] 7.2 Write property tests for core Task operations
+    - **Property 2: Default List Assignment**
+    - **Validates: Requirements 1.2**
+  - [ ] 7.3 Implement Task history logging
+    - Create logHistory() helper
+    - Log all property changes with previous/new values
+    - Implement getHistory() ordered by timestamp desc
+    - _Requirements: 3.4, 4.1, 5.1, 5.2, 5.3_
+  - [ ] 7.4 Write property tests for Task history
+    - **Property 9: Task History Logging**
+    - **Property 10: Task History Ordering**
+    - **Validates: Requirements 3.4, 4.1, 5.2, 5.3, 22.1, 22.2**
+  - [ ] 7.5 Implement Subtask management
+    - Implement addSubtask(), toggleSubtask(), deleteSubtask()
+    - Implement getSubtasks() for a task
+    - Ensure cascade delete with parent
+    - _Requirements: 6.1, 6.2, 6.3, 6.4_
+  - [ ] 7.6 Write property tests for Subtasks
+    - **Property 11: Subtask Parent Association**
+    - **Property 12: Subtask Completion Independence**
+    - **Property 13: Subtask Cascade Delete**
+    - **Validates: Requirements 6.1, 6.3, 6.4**
+  - [ ] 7.7 Implement Task completion
+    - Implement toggleComplete() with history logging
+    - Handle recurring task next occurrence creation
+    - _Requirements: 22.1, 22.2, 10.2_
+
+- [ ] 8. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 9. Recurrence Utilities
+  - [ ] 9.1 Implement recurrence pattern utilities
+    - Create parseRecurrencePattern() for all pattern types
+    - Implement calculateNextOccurrence() for each pattern type
+    - Implement formatRecurrencePattern() for human-readable display
+    - Support custom patterns (interval, weekdays, ordinal)
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [ ] 9.2 Write property tests for recurrence
+    - **Property 19: Recurrence Pattern Validation**
+    - **Property 20: Recurring Task Next Occurrence**
+    - **Property 21: Custom Recurrence Calculation**
+    - **Property 22: Recurrence Pattern Formatting**
+    - **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
+
+- [ ] 10. View Filtering Implementation
+  - [ ] 10.1 Implement view query methods
+    - Implement getToday() - tasks with date = today
+    - Implement getNext7Days() - tasks from today to +7 days
+    - Implement getUpcoming() - tasks from today onward
+    - Implement getAll() - all tasks
+    - Add includeCompleted parameter to all methods
+    - _Requirements: 12.1, 12.2, 13.1, 13.2, 13.3, 14.1, 14.2, 14.3, 15.1, 15.2, 15.3_
+  - [ ] 10.2 Write property tests for view filtering
+    - **Property 25: Today View Date Filter**
+    - **Property 26: Completed Task Toggle Filter**
+    - **Property 27: Next 7 Days View Date Range**
+    - **Property 28: Date Grouping**
+    - **Property 29: Upcoming View Future Filter**
+    - **Property 30: All View Completeness**
+    - **Validates: Requirements 12.1, 12.2, 13.1, 13.2, 13.3, 14.1, 14.2, 14.3, 15.1, 15.2**
+  - [ ] 10.3 Implement overdue task detection
+    - Create isOverdue() utility
+    - Implement getOverdue() query
+    - Implement getOverdueCount() for sidebar badge
+    - _Requirements: 16.1, 16.2, 16.3_
+  - [ ] 10.4 Write property tests for overdue detection
+    - **Property 31: Overdue Task Detection**
+    - **Property 32: Overdue Count Accuracy**
+    - **Property 33: Overdue Completion Clearing**
+    - **Validates: Requirements 16.1, 16.2, 16.3**
+
+- [ ] 11. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 12. Search Service Implementation
+  - [ ] 12.1 Implement fuzzy search
+    - Configure Fuse.js for task search
+    - Search across name, description, and label names
+    - Return results ranked by relevance score
+    - _Requirements: 17.1, 17.2, 17.3, 17.4_
+  - [ ] 12.2 Write property tests for search
+    - **Property 34: Fuzzy Search Matching**
+    - **Property 35: Search Result Ranking**
+    - **Validates: Requirements 17.1, 17.2, 17.3**
+
+- [ ] 13. Attachment Service Implementation
+  - [ ] 13.1 Implement file attachment handling
+    - Create upload endpoint with file storage
+    - Store metadata in database
+    - Implement download endpoint
+    - Implement delete with file cleanup
+    - _Requirements: 11.1, 11.2, 11.3, 11.4_
+  - [ ] 13.2 Write property tests for attachments
+    - **Property 23: Attachment Metadata Persistence**
+    - **Property 24: Attachment Cascade Delete**
+    - **Validates: Requirements 11.1, 11.2, 11.3**
+
+- [ ] 14. Reminder Service Implementation
+  - [ ] 14.1 Implement reminder management
+    - Create scheduleReminder() with predefined and custom intervals
+    - Implement cancelReminder()
+    - Store reminder method (push, email, in-app)
+    - _Requirements: 27.1, 27.2, 27.4, 27.5_
+  - [ ] 14.2 Write property tests for reminders
+    - **Property 38: Reminder Interval Storage**
+    - **Property 39: Multiple Reminder Support**
+    - **Validates: Requirements 27.1, 27.2, 27.4**
+
+- [ ] 15. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 16. Natural Language Parser
+  - [ ] 16.1 Implement NLP parser service
+    - Use chrono-node for date/time extraction
+    - Implement priority keyword detection (urgent, important, high priority)
+    - Implement list reference detection (in Work, #Personal)
+    - Implement fallback to full text as task name
+    - _Requirements: 28.1, 28.2, 28.3, 28.5_
+  - [ ] 16.2 Write property tests for NLP parser
+    - **Property 40: Natural Language Date Extraction**
+    - **Property 41: Natural Language Priority Extraction**
+    - **Property 42: Natural Language List Extraction**
+    - **Property 43: Natural Language Fallback**
+    - **Validates: Requirements 28.1, 28.2, 28.3, 28.5**
+
+- [ ] 17. Smart Scheduler Service
+  - [ ] 17.1 Implement scheduling suggestions
+    - Find available time slots based on existing tasks
+    - Consider priority and deadline proximity for ranking
+    - Avoid conflicts with scheduled tasks
+    - Return multiple ranked suggestions
+    - _Requirements: 29.1, 29.2, 29.3, 29.4, 29.5_
+  - [ ] 17.2 Write property tests for scheduler
+    - **Property 44: Schedule Suggestion Non-Conflict**
+    - **Property 45: Schedule Suggestion Ranking**
+    - **Validates: Requirements 29.3, 29.5**
+
+- [ ] 18. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 19. API Routes
+  - [ ] 19.1 Implement Task API routes
+    - GET/POST /api/tasks
+    - GET/PUT/DELETE /api/tasks/[id]
+    - POST /api/tasks/[id]/subtasks
+    - GET /api/tasks/[id]/history
+    - _Requirements: 3.1, 3.2, 4.1, 5.1, 6.1_
+  - [ ] 19.2 Implement List API routes
+    - GET/POST /api/lists
+    - GET/PUT/DELETE /api/lists/[id]
+    - _Requirements: 2.1, 2.2, 2.3_
+  - [ ] 19.3 Implement Label API routes
+    - GET/POST /api/labels
+    - GET/PUT/DELETE /api/labels/[id]
+    - _Requirements: 8.1, 8.4_
+  - [ ] 19.4 Implement Search API route
+    - GET /api/search?q=query
+    - _Requirements: 17.1_
+  - [ ] 19.5 Implement Attachment API routes
+    - POST /api/attachments (multipart upload)
+    - GET/DELETE /api/attachments/[id]
+    - _Requirements: 11.1, 11.3_
+
+- [ ] 20. Layout Components
+  - [ ] 20.1 Create root layout with providers
+    - Set up ThemeProvider for light/dark mode
+    - Set up React Query provider
+    - Configure View Transition API
+    - _Requirements: 19.1, 19.2, 21.1, 21.2_
+  - [ ] 20.2 Implement Sidebar component
+    - Display views (Today, Next 7 Days, Upcoming, All)
+    - Display lists with Inbox first
+    - Display labels
+    - Show overdue badge count
+    - Highlight current selection
+    - Collapsible on mobile
+    - _Requirements: 18.1, 18.2, 18.3, 18.4, 16.2_
+  - [ ] 20.3 Implement MainPanel component
+    - Header with search bar and theme toggle
+    - Content area for task lists
+    - Responsive layout
+    - _Requirements: 17.1, 19.2, 20.1, 20.2_
+
+- [ ] 21. Task Components
+  - [ ] 21.1 Implement TaskList component
+    - Display tasks with grouping by date option
+    - Show/hide completed toggle
+    - Animate with Framer Motion
+    - _Requirements: 12.2, 13.2, 14.2_
+  - [ ] 21.2 Implement TaskItem component
+    - Display task name, priority indicator, due date
+    - Show labels, subtask progress, attachment indicator
+    - Checkbox for completion
+    - Overdue highlighting
+    - _Requirements: 9.2, 16.1, 22.3_
+  - [ ] 21.3 Implement TaskForm component
+    - All task fields with validation
+    - Date picker, time picker
+    - Priority selector, recurrence selector
+    - Label multi-select
+    - Subtask management
+    - Attachment upload
+    - Reminder configuration
+    - _Requirements: 3.2, 24.1, 26.1, 26.2, 26.3_
+  - [ ] 21.4 Implement TaskDetail component
+    - Full task view with all properties
+    - Edit mode
+    - History view
+    - _Requirements: 5.1, 7.3_
+  - [ ] 21.5 Implement NaturalLanguageInput component
+    - Text input with parsing preview
+    - Confirmation before task creation
+    - _Requirements: 28.1, 28.4_
+
+- [ ] 22. Common Components
+  - [ ] 22.1 Implement DatePicker component
+    - Calendar-based selection
+    - Highlight current and selected dates
+    - _Requirements: 26.1, 26.2, 26.3_
+  - [ ] 22.2 Implement PrioritySelector component
+    - Visual priority indicators
+    - _Requirements: 9.1, 9.2_
+  - [ ] 22.3 Implement RecurrenceSelector component
+    - Preset patterns and custom configuration
+    - Human-readable preview
+    - _Requirements: 10.1, 10.3, 10.4_
+  - [ ] 22.4 Implement SearchBar component
+    - Fuzzy search input
+    - Results dropdown
+    - _Requirements: 17.1, 17.4_
+  - [ ] 22.5 Implement EmojiPicker and ColorPicker
+    - For list customization
+    - _Requirements: 2.1, 2.4_
+
+- [ ] 23. View Pages
+  - [ ] 23.1 Implement Today page
+    - Fetch and display today's tasks
+    - Completed toggle
+    - _Requirements: 12.1, 12.2, 12.3_
+  - [ ] 23.2 Implement Next 7 Days page
+    - Fetch and display week's tasks grouped by date
+    - Completed toggle
+    - _Requirements: 13.1, 13.2, 13.3_
+  - [ ] 23.3 Implement Upcoming page
+    - Fetch and display future tasks grouped by period
+    - Completed toggle
+    - _Requirements: 14.1, 14.2, 14.3_
+  - [ ] 23.4 Implement All page
+    - Fetch and display all tasks
+    - Distinguish scheduled vs unscheduled
+    - Completed toggle
+    - _Requirements: 15.1, 15.2, 15.3_
+  - [ ] 23.5 Implement List detail page
+    - Display tasks for specific list
+    - List management (edit, delete)
+    - _Requirements: 2.2, 2.3_
+  - [ ] 23.6 Implement Search results page
+    - Display search results ranked by relevance
+    - _Requirements: 17.2_
+
+- [ ] 24. React Query Hooks
+  - [ ] 24.1 Implement data fetching hooks
+    - useTasks(), useTask(), useTaskMutations()
+    - useLists(), useListMutations()
+    - useLabels(), useLabelMutations()
+    - useSearch()
+    - _Requirements: 25.1, 25.2, 25.3_
+
+- [ ] 25. Loading and Error States
+  - [ ] 25.1 Implement loading skeletons
+    - Task list skeleton
+    - Sidebar skeleton
+    - _Requirements: 25.1_
+  - [ ] 25.2 Implement error boundaries and toast notifications
+    - Global error boundary
+    - Toast for success/error feedback
+    - _Requirements: 25.2, 25.3_
+
+- [ ] 26. Animations and Transitions
+  - [ ] 26.1 Add Framer Motion animations
+    - Task list item animations
+    - Sidebar collapse animation
+    - Modal/dialog animations
+    - _Requirements: 21.1_
+  - [ ] 26.2 Configure View Transition API
+    - Page transition animations
+    - Fallback for unsupported browsers
+    - _Requirements: 21.1, 21.2_
+
+- [ ] 27. Responsive Design
+  - [ ] 27.1 Implement mobile layout
+    - Collapsible sidebar
+    - Touch-friendly interactions
+    - Responsive task forms
+    - _Requirements: 20.1, 20.2, 20.3_
+
+- [ ] 28. Smart Scheduling UI
+  - [ ] 28.1 Implement scheduling suggestions UI
+    - Display suggestions when creating unscheduled task with estimate
+    - Show ranked options with reasons
+    - Accept suggestion action
+    - _Requirements: 29.1, 29.4, 29.5_
+
+- [ ] 29. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

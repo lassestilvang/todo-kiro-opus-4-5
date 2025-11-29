@@ -272,19 +272,19 @@
     - Responsive layout
     - _Requirements: 17.1, 19.2, 20.1, 20.2_
 
-- [ ] 21. Task Components
-  - [ ] 21.1 Implement TaskList component
+- [x] 21. Task Components
+  - [x] 21.1 Implement TaskList component
     - Display tasks with grouping by date option
     - Show/hide completed toggle
     - Animate with Framer Motion
     - _Requirements: 12.2, 13.2, 14.2_
-  - [ ] 21.2 Implement TaskItem component
+  - [x] 21.2 Implement TaskItem component
     - Display task name, priority indicator, due date
     - Show labels, subtask progress, attachment indicator
     - Checkbox for completion
     - Overdue highlighting
     - _Requirements: 9.2, 16.1, 22.3_
-  - [ ] 21.3 Implement TaskForm component
+  - [x] 21.3 Implement TaskForm component
     - All task fields with validation
     - Date picker, time picker
     - Priority selector, recurrence selector
@@ -293,12 +293,12 @@
     - Attachment upload
     - Reminder configuration
     - _Requirements: 3.2, 24.1, 26.1, 26.2, 26.3_
-  - [ ] 21.4 Implement TaskDetail component
+  - [x] 21.4 Implement TaskDetail component
     - Full task view with all properties
     - Edit mode
     - History view
     - _Requirements: 5.1, 7.3_
-  - [ ] 21.5 Implement NaturalLanguageInput component
+  - [x] 21.5 Implement NaturalLanguageInput component
     - Text input with parsing preview
     - Confirmation before task creation
     - _Requirements: 28.1, 28.4_

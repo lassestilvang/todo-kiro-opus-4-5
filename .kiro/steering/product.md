@@ -2,50 +2,70 @@
 inclusion: always
 ---
 
-# Daily Task Planner
+# Daily Task Planner — Product Rules
 
-A task management app built with Next.js 16 (App Router). Users organize tasks into lists, apply labels, set priorities/deadlines, and track time.
+Task management app: organize tasks into lists, apply labels, set priorities/deadlines, track time.
 
-## Domain Model
+## Domain Entities
 
-- **Task**: Core entity with name, description, date, deadline, estimate/actualTime (minutes), priority, recurrence, subtasks, attachments, reminders
-- **List**: Task container; "Inbox" is default and immutable (cannot delete/rename)
-- **Label**: Cross-list categorization tag with optional icon
-- **Subtask**: Nested task item; cascade-deleted with parent
-- **Priority**: `'high' | 'medium' | 'low' | 'none'` (default: `'none'`)
-- **Recurrence**: `'daily' | 'weekly' | 'weekday' | 'monthly' | 'yearly' | 'custom'`
+| Entity | Key Fields | Notes |
+|--------|------------|-------|
+| Task | name, description, date, deadline, estimate, actualTime, priority, recurrence | Core entity; times in minutes |
+| List | name | "Inbox" is immutable default |
+| Label | name, icon? | Cross-list categorization |
+| Subtask | name, completed | Cascade-deleted with parent |
+| Reminder | offsetMinutes, method | method: `'push' \| 'email' \| 'in-app'` |
 
-## Key Business Rules
+## Enums
 
-1. Inbox list always exists, appears first, cannot be deleted or renamed
-2. Tasks without a listId default to Inbox
-3. Deleting a list moves its tasks to Inbox
-4. Deleting a task cascade-deletes subtasks, attachments, reminders, history
-5. Deleting a label removes it from all tasks
-6. Completing all subtasks does NOT auto-complete parent task
-7. All task modifications log to task history (field, old value, new value, timestamp)
-8. Completing a recurring task creates next occurrence based on pattern
+```typescript
+type Priority = 'high' | 'medium' | 'low' | 'none'; // default: 'none'
+type Recurrence = 'daily' | 'weekly' | 'weekday' | 'monthly' | 'yearly' | 'custom';
+type ReminderMethod = 'push' | 'email' | 'in-app';
+```
+
+## Business Rules (MUST enforce)
+
+### Inbox Behavior
+- Inbox list always exists, appears first in UI
+- Cannot delete or rename Inbox
+- Tasks without listId default to Inbox
+- Deleting any other list moves its tasks to Inbox
+
+### Cascade Deletes
+- Task deletion → removes subtasks, attachments, reminders, history
+- Label deletion → removes label from all tasks (not the tasks themselves)
+
+### Task Completion
+- Completing all subtasks does NOT auto-complete parent
+- Completing recurring task → create next occurrence based on pattern
+
+### History Tracking
+- Log all task modifications: `{ field, oldValue, newValue, timestamp }`
 
 ## Views
 
-- **Today**: Tasks with date = current date
-- **Next 7 Days**: Tasks from today through 7 days ahead, grouped by date
-- **Upcoming**: Tasks from today onward, grouped by date/period
-- **All**: All tasks (scheduled and unscheduled)
-- All views support toggle to show/hide completed tasks
+| View | Filter Logic |
+|------|--------------|
+| Today | `date === today` |
+| Next 7 Days | `today <= date <= today + 7`, grouped by date |
+| Upcoming | `date >= today`, grouped by date/period |
+| All | All tasks (scheduled + unscheduled) |
 
-## Validation Rules
+All views support show/hide completed toggle.
 
-- Task/List/Label names: required, non-empty, non-whitespace
-- Priority: must be valid enum value
-- Time estimates: stored as minutes (integer)
-- Reminder offsetMinutes: minutes before deadline
-- Reminder method: `'push' | 'email' | 'in-app'`
+## Validation
 
-## Features
+- Names (task/list/label): required, non-empty after trim
+- Priority: must match enum
+- Time fields: integer minutes
+- Reminder offsetMinutes: positive integer
 
-- Fuzzy search across task names, descriptions, labels (using fuse.js)
-- Natural language task entry (using chrono-node for date parsing)
-- Smart scheduling suggestions based on existing tasks
-- Overdue task detection (incomplete + deadline in past)
-- Dark/light theme (system preference default)
+## Feature Implementations
+
+| Feature | Implementation |
+|---------|----------------|
+| Search | fuse.js fuzzy search on name, description, labels |
+| NLP input | chrono-node for date parsing |
+| Overdue detection | `!completed && deadline < now` |
+| Theme | next-themes, system preference default |

@@ -7,3 +7,6 @@ export type { SearchResult } from './search.service';
 export { attachmentService, AttachmentNotFoundError, TaskNotFoundError as AttachmentTaskNotFoundError, FileStorageError } from './attachment.service';
 export type { CreateAttachmentInput, IAttachmentService } from './attachment.service';
 export { reminderService, ReminderNotFoundError, TaskNotFoundError as ReminderTaskNotFoundError, ReminderValidationError, PREDEFINED_INTERVALS, validateReminderInput, getReminderById, markReminderSent } from './reminder.service';
+export { nlpParserService, parse as parseNaturalLanguage } from './nlp-parser.service';
+export type { INLPParserService } from './nlp-parser.service';
+export { schedulerService } from './scheduler.service';

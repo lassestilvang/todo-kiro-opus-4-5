@@ -200,33 +200,33 @@
 - [x] 15. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Natural Language Parser
-  - [ ] 16.1 Implement NLP parser service
+- [x] 16. Natural Language Parser
+  - [x] 16.1 Implement NLP parser service
     - Use chrono-node for date/time extraction
     - Implement priority keyword detection (urgent, important, high priority)
     - Implement list reference detection (in Work, #Personal)
     - Implement fallback to full text as task name
     - _Requirements: 28.1, 28.2, 28.3, 28.5_
-  - [ ] 16.2 Write property tests for NLP parser
+  - [x] 16.2 Write property tests for NLP parser
     - **Property 40: Natural Language Date Extraction**
     - **Property 41: Natural Language Priority Extraction**
     - **Property 42: Natural Language List Extraction**
     - **Property 43: Natural Language Fallback**
     - **Validates: Requirements 28.1, 28.2, 28.3, 28.5**
 
-- [ ] 17. Smart Scheduler Service
-  - [ ] 17.1 Implement scheduling suggestions
+- [x] 17. Smart Scheduler Service
+  - [x] 17.1 Implement scheduling suggestions
     - Find available time slots based on existing tasks
     - Consider priority and deadline proximity for ranking
     - Avoid conflicts with scheduled tasks
     - Return multiple ranked suggestions
     - _Requirements: 29.1, 29.2, 29.3, 29.4, 29.5_
-  - [ ] 17.2 Write property tests for scheduler
+  - [x] 17.2 Write property tests for scheduler
     - **Property 44: Schedule Suggestion Non-Conflict**
     - **Property 45: Schedule Suggestion Ranking**
     - **Validates: Requirements 29.3, 29.5**
 
-- [ ] 18. Checkpoint - Ensure all tests pass
+- [x] 18. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 19. API Routes

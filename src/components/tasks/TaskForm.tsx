@@ -40,8 +40,10 @@ import type {
   CreateTaskInput,
   UpdateTaskInput,
   ReminderMethod,
+  ScheduleSuggestion,
 } from '@/types';
 import { formatRecurrencePattern } from '@/lib/utils/recurrence';
+import { ScheduleSuggestions } from './ScheduleSuggestions';
 
 interface TaskFormProps {
   task?: Task;
@@ -214,6 +216,11 @@ export function TaskForm({
     setReminders(reminders.filter(r => r.id !== id));
   };
 
+  const handleAcceptScheduleSuggestion = (suggestion: ScheduleSuggestion) => {
+    // Set the date from the suggestion
+    setDate(suggestion.startTime);
+  };
+
   const toggleLabel = (labelId: string) => {
     setSelectedLabelIds(prev =>
       prev.includes(labelId)
@@ -354,6 +361,19 @@ export function TaskForm({
       </div>
       {errors.estimate && (
         <p className="text-xs text-destructive -mt-2">{errors.estimate}</p>
+      )}
+
+      {/* Smart Scheduling Suggestions */}
+      {!isEditing && (
+        <ScheduleSuggestions
+          taskData={{
+            estimate: estimate ? parseTimeToMinutes(estimate) : undefined,
+            priority,
+            deadline: deadline,
+            date,
+          }}
+          onAcceptSuggestion={handleAcceptScheduleSuggestion}
+        />
       )}
 
       {/* Recurrence */}

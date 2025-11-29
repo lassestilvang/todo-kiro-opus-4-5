@@ -385,8 +385,8 @@
     - Responsive task forms
     - _Requirements: 20.1, 20.2, 20.3_
 
-- [ ] 28. Smart Scheduling UI
-  - [ ] 28.1 Implement scheduling suggestions UI
+- [x] 28. Smart Scheduling UI
+  - [x] 28.1 Implement scheduling suggestions UI
     - Display suggestions when creating unscheduled task with estimate
     - Show ranked options with reasons
     - Accept suggestion action

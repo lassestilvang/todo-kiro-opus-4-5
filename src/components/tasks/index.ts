@@ -4,3 +4,4 @@ export { TaskItem } from './TaskItem';
 export { TaskForm } from './TaskForm';
 export { TaskDetail } from './TaskDetail';
 export { NaturalLanguageInput } from './NaturalLanguageInput';
+export { ScheduleSuggestions } from './ScheduleSuggestions';

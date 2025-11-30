@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
-import { Plus, CalendarDays } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, CalendarDays, Sparkles, Sun, CloudSun, Moon } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { TaskList, TaskDetail, TaskForm } from '@/components/tasks';
 import { Button } from '@/components/ui/button';
@@ -16,10 +17,8 @@ import {
 import { showSuccess, showError } from '@/lib/utils/toast';
 import { TaskListSkeleton, QueryErrorFallback } from '@/components/common';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput } from '@/types';
+import { cn } from '@/lib/utils';
 
-/**
- * Parses dates from JSON response
- */
 function parseTaskDates(task: Task): Task {
   return {
     ...task,
@@ -41,9 +40,6 @@ function parseTaskDates(task: Task): Task {
   };
 }
 
-/**
- * Fetches today's tasks from the API
- */
 async function fetchTodayTasks(includeCompleted: boolean): Promise<Task[]> {
   const res = await fetch(`/api/tasks/today?includeCompleted=${includeCompleted}`);
   if (!res.ok) throw new Error('Failed to fetch today\'s tasks');
@@ -51,27 +47,18 @@ async function fetchTodayTasks(includeCompleted: boolean): Promise<Task[]> {
   return data.map(parseTaskDates);
 }
 
-/**
- * Fetches all lists
- */
 async function fetchLists(): Promise<List[]> {
   const res = await fetch('/api/lists');
   if (!res.ok) throw new Error('Failed to fetch lists');
   return res.json();
 }
 
-/**
- * Fetches all labels
- */
 async function fetchLabels(): Promise<Label[]> {
   const res = await fetch('/api/labels');
   if (!res.ok) throw new Error('Failed to fetch labels');
   return res.json();
 }
 
-/**
- * Fetches task history
- */
 async function fetchTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
   const res = await fetch(`/api/tasks/${taskId}/history`);
   if (!res.ok) throw new Error('Failed to fetch task history');
@@ -82,9 +69,6 @@ async function fetchTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
   }));
 }
 
-/**
- * Toggles task completion status
- */
 async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
@@ -95,9 +79,6 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   return res.json();
 }
 
-/**
- * Creates a new task
- */
 async function createTask(data: CreateTaskInput): Promise<Task> {
   const res = await fetch('/api/tasks', {
     method: 'POST',
@@ -108,9 +89,6 @@ async function createTask(data: CreateTaskInput): Promise<Task> {
   return res.json();
 }
 
-/**
- * Updates an existing task
- */
 async function updateTask({ id, data }: { id: string; data: UpdateTaskInput }): Promise<Task> {
   const res = await fetch(`/api/tasks/${id}`, {
     method: 'PUT',
@@ -121,9 +99,6 @@ async function updateTask({ id, data }: { id: string; data: UpdateTaskInput }): 
   return res.json();
 }
 
-/**
- * Deletes a task
- */
 async function deleteTask(taskId: string): Promise<void> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'DELETE',
@@ -131,12 +106,13 @@ async function deleteTask(taskId: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete task');
 }
 
-/**
- * Today Page Component
- * Displays tasks scheduled for today with show/hide completed toggle.
- * 
- * Requirements: 12.1, 12.2, 12.3
- */
+function getGreeting(): { text: string; icon: React.ReactNode } {
+  const hour = new Date().getHours();
+  if (hour < 12) return { text: 'Good morning', icon: <Sun className="h-6 w-6 text-amber-400" /> };
+  if (hour < 17) return { text: 'Good afternoon', icon: <CloudSun className="h-6 w-6 text-orange-400" /> };
+  return { text: 'Good evening', icon: <Moon className="h-6 w-6 text-indigo-400" /> };
+}
+
 export default function TodayPage(): React.ReactElement {
   const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = React.useState(true);
@@ -145,14 +121,13 @@ export default function TodayPage(): React.ReactElement {
 
   const today = new Date();
   const formattedDate = format(today, 'EEEE, MMMM d');
+  const greeting = getGreeting();
 
-  // Fetch today's tasks
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks', 'today', showCompleted],
     queryFn: () => fetchTodayTasks(showCompleted),
   });
 
-  // Fetch lists and labels for forms
   const { data: lists = [] } = useQuery({
     queryKey: ['lists'],
     queryFn: fetchLists,
@@ -163,14 +138,12 @@ export default function TodayPage(): React.ReactElement {
     queryFn: fetchLabels,
   });
 
-  // Fetch history for selected task
   const { data: taskHistory = [] } = useQuery({
     queryKey: ['taskHistory', selectedTask?.id],
     queryFn: () => selectedTask ? fetchTaskHistory(selectedTask.id) : Promise.resolve([]),
     enabled: !!selectedTask,
   });
 
-  // Toggle complete mutation
   const toggleCompleteMutation = useMutation({
     mutationFn: toggleTaskComplete,
     onSuccess: () => {
@@ -182,7 +155,6 @@ export default function TodayPage(): React.ReactElement {
     },
   });
 
-  // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
@@ -195,7 +167,6 @@ export default function TodayPage(): React.ReactElement {
     },
   });
 
-  // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: updateTask,
     onSuccess: () => {
@@ -208,7 +179,6 @@ export default function TodayPage(): React.ReactElement {
     },
   });
 
-  // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: deleteTask,
     onSuccess: () => {
@@ -235,7 +205,6 @@ export default function TodayPage(): React.ReactElement {
   };
 
   const handleCreateTask = (data: CreateTaskInput | UpdateTaskInput): void => {
-    // Set today's date for new tasks created from this view
     const taskData: CreateTaskInput = {
       ...(data as CreateTaskInput),
       date: today,
@@ -265,6 +234,10 @@ export default function TodayPage(): React.ReactElement {
     queryClient.invalidateQueries({ queryKey: ['tasks', 'today'] });
   };
 
+  const completedCount = tasks.filter(t => t.completed).length;
+  const totalCount = tasks.length;
+  const progress = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
   if (error) {
     return (
       <AppLayout title="Today">
@@ -278,25 +251,99 @@ export default function TodayPage(): React.ReactElement {
 
   return (
     <AppLayout title="Today">
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <CalendarDays className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
-              <span className="truncate">Today</span>
-            </h1>
-            <p className="text-sm text-muted-foreground">{formattedDate}</p>
+      <div className="space-y-8">
+        {/* Hero Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-3xl glass-card p-6 sm:p-8"
+        >
+          {/* Background gradient */}
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
+          
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-3">
+              {/* Greeting */}
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center gap-2 text-muted-foreground"
+              >
+                {greeting.icon}
+                <span className="text-sm font-medium">{greeting.text}</span>
+              </motion.div>
+              
+              {/* Title */}
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-3xl sm:text-4xl font-bold gradient-text flex items-center gap-3"
+              >
+                <CalendarDays className="h-8 w-8 sm:h-10 sm:w-10" />
+                Today
+              </motion.h1>
+              
+              {/* Date */}
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-muted-foreground"
+              >
+                {formattedDate}
+              </motion.p>
+              
+              {/* Progress */}
+              {totalCount > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="pt-2 space-y-2"
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Progress</span>
+                    <span className="font-semibold tabular-nums">
+                      {completedCount} of {totalCount} completed
+                    </span>
+                  </div>
+                  <div className="h-2 rounded-full bg-muted/50 overflow-hidden">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${progress}%` }}
+                      transition={{ duration: 0.8, delay: 0.6, ease: 'easeOut' }}
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </div>
+            
+            {/* Add Task Button */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: 'spring' }}
+            >
+              <Button 
+                onClick={() => setIsFormOpen(true)} 
+                size="lg"
+                className={cn(
+                  'btn-primary-glow h-12 px-6 rounded-xl',
+                  'bg-gradient-to-r from-primary to-accent',
+                  'text-white font-semibold',
+                  'shadow-lg shadow-primary/25'
+                )}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Task
+              </Button>
+            </motion.div>
           </div>
-          <Button 
-            onClick={() => setIsFormOpen(true)} 
-            size="sm"
-            className="h-10 px-4 sm:h-8 sm:px-3 shrink-0"
-          >
-            <Plus className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Add Task</span>
-          </Button>
-        </div>
+        </motion.div>
 
         {/* Task List */}
         {isLoading ? (
@@ -315,7 +362,7 @@ export default function TodayPage(): React.ReactElement {
 
       {/* Task Detail Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-border/50">
           <DialogHeader className="sr-only">
             <DialogTitle>Task Details</DialogTitle>
           </DialogHeader>
@@ -335,9 +382,12 @@ export default function TodayPage(): React.ReactElement {
 
       {/* Create Task Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-border/50">
           <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Create Task
+            </DialogTitle>
           </DialogHeader>
           <TaskForm
             lists={lists}

@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, addDays } from 'date-fns';
-import { Plus, Calendar } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Plus, CalendarDays, Sparkles } from 'lucide-react';
 import { AppLayout } from '@/components/layout';
 import { TaskList, TaskDetail, TaskForm } from '@/components/tasks';
 import { Button } from '@/components/ui/button';
@@ -15,11 +16,9 @@ import {
 } from '@/components/ui/dialog';
 import { showSuccess, showError } from '@/lib/utils/toast';
 import { TaskListSkeleton, QueryErrorFallback } from '@/components/common';
+import { cn } from '@/lib/utils';
 import type { Task, List, Label, TaskHistoryEntry, CreateTaskInput, UpdateTaskInput } from '@/types';
 
-/**
- * Parses dates from JSON response
- */
 function parseTaskDates(task: Task): Task {
   return {
     ...task,
@@ -41,9 +40,6 @@ function parseTaskDates(task: Task): Task {
   };
 }
 
-/**
- * Fetches next 7 days tasks from the API
- */
 async function fetchNext7DaysTasks(includeCompleted: boolean): Promise<Task[]> {
   const res = await fetch(`/api/tasks/next7days?includeCompleted=${includeCompleted}`);
   if (!res.ok) throw new Error('Failed to fetch next 7 days tasks');
@@ -51,27 +47,18 @@ async function fetchNext7DaysTasks(includeCompleted: boolean): Promise<Task[]> {
   return data.map(parseTaskDates);
 }
 
-/**
- * Fetches all lists
- */
 async function fetchLists(): Promise<List[]> {
   const res = await fetch('/api/lists');
   if (!res.ok) throw new Error('Failed to fetch lists');
   return res.json();
 }
 
-/**
- * Fetches all labels
- */
 async function fetchLabels(): Promise<Label[]> {
   const res = await fetch('/api/labels');
   if (!res.ok) throw new Error('Failed to fetch labels');
   return res.json();
 }
 
-/**
- * Fetches task history
- */
 async function fetchTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
   const res = await fetch(`/api/tasks/${taskId}/history`);
   if (!res.ok) throw new Error('Failed to fetch task history');
@@ -82,9 +69,6 @@ async function fetchTaskHistory(taskId: string): Promise<TaskHistoryEntry[]> {
   }));
 }
 
-/**
- * Toggles task completion status
- */
 async function toggleTaskComplete(taskId: string): Promise<Task> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'PUT',
@@ -95,9 +79,6 @@ async function toggleTaskComplete(taskId: string): Promise<Task> {
   return res.json();
 }
 
-/**
- * Creates a new task
- */
 async function createTask(data: CreateTaskInput): Promise<Task> {
   const res = await fetch('/api/tasks', {
     method: 'POST',
@@ -108,9 +89,6 @@ async function createTask(data: CreateTaskInput): Promise<Task> {
   return res.json();
 }
 
-/**
- * Updates an existing task
- */
 async function updateTask({ id, data }: { id: string; data: UpdateTaskInput }): Promise<Task> {
   const res = await fetch(`/api/tasks/${id}`, {
     method: 'PUT',
@@ -121,9 +99,6 @@ async function updateTask({ id, data }: { id: string; data: UpdateTaskInput }): 
   return res.json();
 }
 
-/**
- * Deletes a task
- */
 async function deleteTask(taskId: string): Promise<void> {
   const res = await fetch(`/api/tasks/${taskId}`, {
     method: 'DELETE',
@@ -131,12 +106,6 @@ async function deleteTask(taskId: string): Promise<void> {
   if (!res.ok) throw new Error('Failed to delete task');
 }
 
-/**
- * Next 7 Days Page Component
- * Displays tasks for the upcoming week grouped by date.
- * 
- * Requirements: 13.1, 13.2, 13.3
- */
 export default function Next7DaysPage(): React.ReactElement {
   const queryClient = useQueryClient();
   const [showCompleted, setShowCompleted] = React.useState(true);
@@ -147,13 +116,11 @@ export default function Next7DaysPage(): React.ReactElement {
   const endDate = addDays(today, 7);
   const dateRange = `${format(today, 'MMM d')} - ${format(endDate, 'MMM d')}`;
 
-  // Fetch next 7 days tasks
   const { data: tasks = [], isLoading, error } = useQuery({
     queryKey: ['tasks', 'next7days', showCompleted],
     queryFn: () => fetchNext7DaysTasks(showCompleted),
   });
 
-  // Fetch lists and labels for forms
   const { data: lists = [] } = useQuery({
     queryKey: ['lists'],
     queryFn: fetchLists,
@@ -164,14 +131,12 @@ export default function Next7DaysPage(): React.ReactElement {
     queryFn: fetchLabels,
   });
 
-  // Fetch history for selected task
   const { data: taskHistory = [] } = useQuery({
     queryKey: ['taskHistory', selectedTask?.id],
     queryFn: () => selectedTask ? fetchTaskHistory(selectedTask.id) : Promise.resolve([]),
     enabled: !!selectedTask,
   });
 
-  // Toggle complete mutation
   const toggleCompleteMutation = useMutation({
     mutationFn: toggleTaskComplete,
     onSuccess: () => {
@@ -183,7 +148,6 @@ export default function Next7DaysPage(): React.ReactElement {
     },
   });
 
-  // Create task mutation
   const createTaskMutation = useMutation({
     mutationFn: createTask,
     onSuccess: () => {
@@ -196,7 +160,6 @@ export default function Next7DaysPage(): React.ReactElement {
     },
   });
 
-  // Update task mutation
   const updateTaskMutation = useMutation({
     mutationFn: updateTask,
     onSuccess: () => {
@@ -209,7 +172,6 @@ export default function Next7DaysPage(): React.ReactElement {
     },
   });
 
-  // Delete task mutation
   const deleteTaskMutation = useMutation({
     mutationFn: deleteTask,
     onSuccess: () => {
@@ -274,27 +236,71 @@ export default function Next7DaysPage(): React.ReactElement {
 
   return (
     <AppLayout title="Next 7 Days">
-      <div className="space-y-4 sm:space-y-6">
-        {/* Header */}
-        <div className="flex items-start sm:items-center justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
-              <Calendar className="h-5 w-5 sm:h-6 sm:w-6 shrink-0" />
-              <span className="truncate">Next 7 Days</span>
-            </h1>
-            <p className="text-sm text-muted-foreground">{dateRange}</p>
+      <div className="space-y-8">
+        {/* Hero Header */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-3xl glass-card p-6 sm:p-8"
+        >
+          <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-violet-500/10 pointer-events-none" />
+          
+          <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+            <div className="space-y-2">
+              <motion.h1 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-3xl sm:text-4xl font-bold gradient-text flex items-center gap-3"
+              >
+                <CalendarDays className="h-8 w-8 sm:h-10 sm:w-10" />
+                Next 7 Days
+              </motion.h1>
+              
+              <motion.p 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3 }}
+                className="text-muted-foreground"
+              >
+                {dateRange}
+              </motion.p>
+              
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center gap-2 pt-2"
+              >
+                <span className="text-2xl font-bold tabular-nums">{tasks.length}</span>
+                <span className="text-muted-foreground">tasks scheduled</span>
+              </motion.div>
+            </div>
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.4, type: 'spring' }}
+            >
+              <Button 
+                onClick={() => setIsFormOpen(true)} 
+                size="lg"
+                className={cn(
+                  'btn-primary-glow h-12 px-6 rounded-xl',
+                  'bg-gradient-to-r from-primary to-accent',
+                  'text-white font-semibold',
+                  'shadow-lg shadow-primary/25'
+                )}
+              >
+                <Plus className="h-5 w-5 mr-2" />
+                Add Task
+              </Button>
+            </motion.div>
           </div>
-          <Button 
-            onClick={() => setIsFormOpen(true)} 
-            size="sm"
-            className="h-10 px-4 sm:h-8 sm:px-3 shrink-0"
-          >
-            <Plus className="h-4 w-4 sm:mr-2" />
-            <span className="hidden sm:inline">Add Task</span>
-          </Button>
-        </div>
+        </motion.div>
 
-        {/* Task List - grouped by date */}
+        {/* Task List */}
         {isLoading ? (
           <TaskListSkeleton count={5} />
         ) : (
@@ -312,7 +318,7 @@ export default function Next7DaysPage(): React.ReactElement {
 
       {/* Task Detail Dialog */}
       <Dialog open={!!selectedTask} onOpenChange={() => setSelectedTask(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-border/50">
           <DialogHeader className="sr-only">
             <DialogTitle>Task Details</DialogTitle>
           </DialogHeader>
@@ -332,9 +338,12 @@ export default function Next7DaysPage(): React.ReactElement {
 
       {/* Create Task Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto glass-card border-border/50">
           <DialogHeader>
-            <DialogTitle>Create Task</DialogTitle>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Sparkles className="h-5 w-5 text-primary" />
+              Create Task
+            </DialogTitle>
           </DialogHeader>
           <TaskForm
             lists={lists}

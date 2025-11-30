@@ -26,7 +26,7 @@ function ThemeToggle(): React.ReactElement {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="h-10 w-10 rounded-xl">
+      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl">
         <Sun className="h-5 w-5" />
       </Button>
     );
@@ -39,19 +39,19 @@ function ThemeToggle(): React.ReactElement {
       variant="ghost"
       size="icon"
       className={cn(
-        'h-10 w-10 rounded-xl transition-all duration-300',
-        'hover:bg-primary/10 hover:scale-105',
-        'active:scale-95'
+        'h-11 w-11 rounded-2xl',
+        'hover:bg-primary/10 hover:scale-105 active:scale-95',
+        'transition-all duration-300'
       )}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
       <AnimatePresence mode="wait">
         <motion.div
           key={isDark ? 'dark' : 'light'}
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          exit={{ scale: 0, rotate: 180 }}
-          transition={{ duration: 0.3 }}
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          exit={{ scale: 0, rotate: 180, opacity: 0 }}
+          transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
         >
           {isDark ? (
             <Sun className="h-5 w-5 text-amber-400" />
@@ -66,17 +66,11 @@ function ThemeToggle(): React.ReactElement {
 }
 
 interface SearchBarProps {
-  onSearch?: (query: string) => void;
-  placeholder?: string;
   expanded?: boolean;
   onToggleExpand?: () => void;
 }
 
-function SearchBar({ 
-  placeholder = 'Search tasks...', 
-  expanded, 
-  onToggleExpand 
-}: SearchBarProps): React.ReactElement {
+function SearchBar({ expanded, onToggleExpand }: SearchBarProps): React.ReactElement {
   const router = useRouter();
   const [query, setQuery] = React.useState('');
   const [isFocused, setIsFocused] = React.useState(false);
@@ -88,7 +82,6 @@ function SearchBar({
     }
   }, [expanded]);
 
-  // Keyboard shortcut
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent): void => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
@@ -96,7 +89,6 @@ function SearchBar({
         inputRef.current?.focus();
       }
     };
-    
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
@@ -108,84 +100,68 @@ function SearchBar({
     }
   };
 
-  const handleClear = (): void => {
-    setQuery('');
-    onToggleExpand?.();
-  };
-
   return (
     <>
-      {/* Mobile search icon */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          'h-10 w-10 rounded-xl sm:hidden',
-          'hover:bg-primary/10',
+          'h-11 w-11 rounded-2xl sm:hidden hover:bg-primary/10',
           expanded && 'hidden'
         )}
         onClick={onToggleExpand}
       >
         <Search className="h-5 w-5" />
-        <span className="sr-only">Search</span>
       </Button>
 
-      {/* Search input */}
       <form 
         onSubmit={handleSubmit} 
         className={cn(
-          'relative flex-1 max-w-lg',
-          'hidden sm:flex',
-          expanded && 'flex absolute inset-x-0 top-0 h-16 items-center bg-background/95 backdrop-blur-xl px-4 z-10 sm:relative sm:inset-auto sm:h-auto sm:px-0 sm:bg-transparent sm:backdrop-blur-none'
+          'relative flex-1 max-w-xl hidden sm:flex',
+          expanded && 'flex absolute inset-x-4 top-1/2 -translate-y-1/2 z-10 sm:relative sm:inset-auto sm:translate-y-0'
         )}
       >
         <motion.div 
           className="relative w-full"
-          animate={{ 
-            scale: isFocused ? 1.02 : 1,
-          }}
+          animate={{ scale: isFocused ? 1.02 : 1 }}
           transition={{ duration: 0.2 }}
         >
           <Search className={cn(
-            'absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors duration-200',
+            'absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors duration-300',
             isFocused ? 'text-primary' : 'text-muted-foreground'
-          )} />
-          <Input
+          )} />          <
+Input
             ref={inputRef}
             type="search"
-            placeholder={placeholder}
+            placeholder="Search tasks..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setIsFocused(true)}
             onBlur={() => setIsFocused(false)}
             className={cn(
-              'pl-11 pr-20 h-11 rounded-xl',
-              'bg-muted/50 border-transparent',
-              'placeholder:text-muted-foreground/60',
-              'transition-all duration-300',
-              'focus:bg-background focus:border-primary/30 focus:shadow-lg focus:shadow-primary/10',
-              expanded && 'flex-1 sm:flex-initial'
+              'pl-12 pr-24 h-12 rounded-2xl',
+              'input-aurora border-transparent',
+              'placeholder:text-muted-foreground/50',
+              'transition-all duration-300'
             )}
           />
           
-          {/* Keyboard shortcut hint */}
           <div className={cn(
-            'absolute right-3 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1',
-            'text-xs text-muted-foreground/50',
+            'absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5',
+            'text-xs text-muted-foreground/40',
             query && 'hidden'
           )}>
-            <kbd className="flex h-5 items-center gap-0.5 rounded border border-border/50 bg-muted/50 px-1.5 font-mono text-[10px]">
-              <Command className="h-2.5 w-2.5" />K
+            <kbd className="flex h-6 items-center gap-1 rounded-lg border border-border/50 bg-muted/30 px-2 font-mono text-[10px]">
+              <Command className="h-3 w-3" />K
             </kbd>
           </div>
           
-          {/* Clear button */}
           {query && (
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 rounded-lg"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-xl"
               onClick={() => setQuery('')}
             >
               <X className="h-4 w-4" />
@@ -193,23 +169,22 @@ function SearchBar({
           )}
         </motion.div>
         
-        {/* Mobile close button */}
         {expanded && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 ml-2 sm:hidden rounded-xl"
-            onClick={handleClear}
+            className="h-11 w-11 ml-2 sm:hidden rounded-2xl"
+            onClick={onToggleExpand}
           >
             <X className="h-5 w-5" />
-            <span className="sr-only">Close search</span>
           </Button>
         )}
       </form>
     </>
   );
 }
+
 
 export function MainPanel({
   children,
@@ -219,30 +194,27 @@ export function MainPanel({
 }: MainPanelProps): React.ReactElement {
   const [searchExpanded, setSearchExpanded] = React.useState(false);
 
-  const handleToggleSearch = (): void => {
-    setSearchExpanded(!searchExpanded);
-  };
-
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden relative">
-      {/* Ambient background */}
-      <div className="ambient-bg">
-        <div className="ambient-orb ambient-orb-1" />
-        <div className="ambient-orb ambient-orb-2" />
-        <div className="ambient-orb ambient-orb-3" />
+    <div className="flex h-full flex-1 flex-col overflow-hidden relative noise-overlay">
+      {/* Aurora Background */}
+      <div className="aurora-bg">
+        <div className="aurora-orb aurora-orb-1" />
+        <div className="aurora-orb aurora-orb-2" />
+        <div className="aurora-orb aurora-orb-3" />
+        <div className="aurora-orb aurora-orb-4" />
       </div>
       
       {/* Header */}
       <header className={cn(
-        'relative flex h-16 items-center gap-3 sm:gap-4 px-4 sm:px-6 lg:px-8',
-        'border-b border-border/30',
-        'glass-subtle'
+        'relative flex h-20 items-center gap-4 px-4 sm:px-6 lg:px-8',
+        'border-b border-border/20',
+        'aurora-glass'
       )}>
         {showMenuButton && !searchExpanded && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 lg:hidden shrink-0 rounded-xl hover:bg-primary/10"
+            className="h-11 w-11 lg:hidden shrink-0 rounded-2xl hover:bg-primary/10"
             onClick={onMenuClick}
           >
             <Menu className="h-5 w-5" />
@@ -262,11 +234,11 @@ export function MainPanel({
 
         <SearchBar 
           expanded={searchExpanded}
-          onToggleExpand={handleToggleSearch}
+          onToggleExpand={() => setSearchExpanded(!searchExpanded)}
         />
 
         {!searchExpanded && (
-          <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
+          <div className="flex items-center gap-3 shrink-0 ml-auto sm:ml-0">
             <ThemeToggle />
           </div>
         )}
@@ -279,9 +251,9 @@ export function MainPanel({
         'overscroll-contain'
       )}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
         >
           {children}
         </motion.div>

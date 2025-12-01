@@ -3,7 +3,8 @@
 import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Search, Sun, Moon, Menu, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Sun, Moon, Menu, X, Command, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,7 +16,7 @@ interface MainPanelProps {
   showMenuButton?: boolean;
 }
 
-function ThemeToggle() {
+function ThemeToggle(): React.ReactElement {
   const { setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
@@ -25,8 +26,8 @@ function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10">
-        <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
+      <Button variant="ghost" size="icon" className="h-11 w-11 rounded-2xl">
+        <Sun className="h-5 w-5" />
       </Button>
     );
   }
@@ -37,35 +38,42 @@ function ThemeToggle() {
     <Button
       variant="ghost"
       size="icon"
-      className="h-9 w-9 sm:h-10 sm:w-10"
+      className={cn(
+        'h-11 w-11 rounded-2xl',
+        'hover:bg-primary/10 hover:scale-105 active:scale-95',
+        'transition-all duration-300'
+      )}
       onClick={() => setTheme(isDark ? 'light' : 'dark')}
     >
-      {isDark ? (
-        <Sun className="h-4 w-4 sm:h-5 sm:w-5" />
-      ) : (
-        <Moon className="h-4 w-4 sm:h-5 sm:w-5" />
-      )}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={isDark ? 'dark' : 'light'}
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          exit={{ scale: 0, rotate: 180, opacity: 0 }}
+          transition={{ duration: 0.4, type: 'spring', stiffness: 200 }}
+        >
+          {isDark ? (
+            <Sun className="h-5 w-5 text-amber-400" />
+          ) : (
+            <Moon className="h-5 w-5 text-primary" />
+          )}
+        </motion.div>
+      </AnimatePresence>
       <span className="sr-only">Toggle theme</span>
     </Button>
   );
 }
 
 interface SearchBarProps {
-  onSearch?: (query: string) => void;
-  placeholder?: string;
   expanded?: boolean;
   onToggleExpand?: () => void;
 }
 
-/**
- * SearchBar Component
- * Responsive search bar that collapses to icon on mobile.
- * 
- * Requirements: 17.1, 20.2
- */
-function SearchBar({ onSearch, placeholder = 'Search tasks...', expanded, onToggleExpand }: SearchBarProps) {
+function SearchBar({ expanded, onToggleExpand }: SearchBarProps): React.ReactElement {
   const router = useRouter();
   const [query, setQuery] = React.useState('');
+  const [isFocused, setIsFocused] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
@@ -74,75 +82,102 @@ function SearchBar({ onSearch, placeholder = 'Search tasks...', expanded, onTogg
     }
   }, [expanded]);
 
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent): void => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     if (query.trim()) {
       router.push(`/search?q=${encodeURIComponent(query.trim())}`);
-      onSearch?.(query);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    const value = e.target.value;
-    setQuery(value);
-  };
-
-  const handleClear = (): void => {
-    setQuery('');
-    onToggleExpand?.();
-  };
-
-  // Mobile: show icon button that expands to full search
   return (
     <>
-      {/* Mobile search icon */}
       <Button
         variant="ghost"
         size="icon"
         className={cn(
-          'h-9 w-9 sm:hidden',
+          'h-11 w-11 rounded-2xl sm:hidden hover:bg-primary/10',
           expanded && 'hidden'
         )}
         onClick={onToggleExpand}
       >
         <Search className="h-5 w-5" />
-        <span className="sr-only">Search</span>
       </Button>
 
-      {/* Expanded mobile search / Desktop search */}
       <form 
         onSubmit={handleSubmit} 
         className={cn(
-          'relative flex-1 max-w-md',
-          // Mobile: hidden by default, shown when expanded
-          'hidden sm:flex',
-          expanded && 'flex absolute inset-x-0 top-0 h-14 items-center bg-background px-4 z-10 sm:relative sm:inset-auto sm:h-auto sm:px-0'
+          'relative flex-1 max-w-xl hidden sm:flex',
+          expanded && 'flex absolute inset-x-4 top-1/2 -translate-y-1/2 z-10 sm:relative sm:inset-auto sm:translate-y-0'
         )}
       >
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          ref={inputRef}
-          type="search"
-          placeholder={placeholder}
-          value={query}
-          onChange={handleChange}
-          className={cn(
-            'pl-9 h-9',
-            // Mobile expanded: full width
-            expanded && 'flex-1 sm:flex-initial'
+        <motion.div 
+          className="relative w-full"
+          animate={{ scale: isFocused ? 1.02 : 1 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Search className={cn(
+            'absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 transition-colors duration-300',
+            isFocused ? 'text-primary' : 'text-muted-foreground'
+          )} />          <
+Input
+            ref={inputRef}
+            type="search"
+            placeholder="Search tasks..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            className={cn(
+              'pl-12 pr-24 h-12 rounded-2xl',
+              'input-aurora border-transparent',
+              'placeholder:text-muted-foreground/50',
+              'transition-all duration-300'
+            )}
+          />
+          
+          <div className={cn(
+            'absolute right-4 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5',
+            'text-xs text-muted-foreground/40',
+            query && 'hidden'
+          )}>
+            <kbd className="flex h-6 items-center gap-1 rounded-lg border border-border/50 bg-muted/30 px-2 font-mono text-[10px]">
+              <Command className="h-3 w-3" />K
+            </kbd>
+          </div>
+          
+          {query && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 rounded-xl"
+              onClick={() => setQuery('')}
+            >
+              <X className="h-4 w-4" />
+            </Button>
           )}
-        />
-        {/* Mobile: close button when expanded */}
+        </motion.div>
+        
         {expanded && (
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-9 w-9 ml-2 sm:hidden"
-            onClick={handleClear}
+            className="h-11 w-11 ml-2 sm:hidden rounded-2xl"
+            onClick={onToggleExpand}
           >
             <X className="h-5 w-5" />
-            <span className="sr-only">Close search</span>
           </Button>
         )}
       </form>
@@ -150,40 +185,36 @@ function SearchBar({ onSearch, placeholder = 'Search tasks...', expanded, onTogg
   );
 }
 
-/**
- * MainPanel Component
- * Main content area with responsive header.
- * 
- * Requirements: 17.1, 19.2, 20.1, 20.2
- */
+
 export function MainPanel({
   children,
   title,
   onMenuClick,
   showMenuButton = false,
-}: MainPanelProps) {
+}: MainPanelProps): React.ReactElement {
   const [searchExpanded, setSearchExpanded] = React.useState(false);
 
-  const handleSearch = (_query: string): void => {
-    // Search functionality is handled by navigation to search page
-  };
-
-  const handleToggleSearch = (): void => {
-    setSearchExpanded(!searchExpanded);
-  };
-
   return (
-    <div className="flex h-full flex-1 flex-col overflow-hidden">
+    <div className="flex h-full flex-1 flex-col overflow-hidden relative noise-overlay">
+      {/* Aurora Background */}
+      <div className="aurora-bg">
+        <div className="aurora-orb aurora-orb-1" />
+        <div className="aurora-orb aurora-orb-2" />
+        <div className="aurora-orb aurora-orb-3" />
+        <div className="aurora-orb aurora-orb-4" />
+      </div>
+      
       {/* Header */}
       <header className={cn(
-        'flex h-14 items-center gap-2 sm:gap-4 border-b bg-background px-3 sm:px-4 lg:px-6',
-        'relative' // For absolute positioned mobile search
+        'relative flex h-20 items-center gap-4 px-4 sm:px-6 lg:px-8',
+        'border-b border-border/20',
+        'aurora-glass'
       )}>
         {showMenuButton && !searchExpanded && (
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 lg:hidden shrink-0"
+            className="h-11 w-11 lg:hidden shrink-0 rounded-2xl hover:bg-primary/10"
             onClick={onMenuClick}
           >
             <Menu className="h-5 w-5" />
@@ -192,17 +223,22 @@ export function MainPanel({
         )}
         
         {title && !searchExpanded && (
-          <h2 className="text-lg font-semibold lg:hidden truncate">{title}</h2>
+          <motion.h2 
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-lg font-semibold lg:hidden truncate gradient-text"
+          >
+            {title}
+          </motion.h2>
         )}
 
         <SearchBar 
-          onSearch={handleSearch} 
           expanded={searchExpanded}
-          onToggleExpand={handleToggleSearch}
+          onToggleExpand={() => setSearchExpanded(!searchExpanded)}
         />
 
         {!searchExpanded && (
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0 ml-auto sm:ml-0">
+          <div className="flex items-center gap-3 shrink-0 ml-auto sm:ml-0">
             <ThemeToggle />
           </div>
         )}
@@ -210,12 +246,17 @@ export function MainPanel({
 
       {/* Content Area */}
       <main className={cn(
-        'flex-1 overflow-y-auto',
-        'p-3 sm:p-4 lg:p-6',
-        // Better touch scrolling
+        'relative flex-1 overflow-y-auto',
+        'p-4 sm:p-6 lg:p-8',
         'overscroll-contain'
       )}>
-        {children}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+        >
+          {children}
+        </motion.div>
       </main>
     </div>
   );

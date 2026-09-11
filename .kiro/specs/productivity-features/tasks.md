@@ -1,0 +1,387 @@
+# Implementation Plan
+
+- [ ] 1. Install Dependencies and Schema Updates
+  - [ ] 1.1 Install new dependencies
+    - Run `bun add recharts @dnd-kit/core @dnd-kit/sortable use-sound cmdk`
+    - _Requirements: Technical requirements_
+  - [ ] 1.2 Extend database schema
+    - Add focusSessions table to schema.ts
+    - Add kanbanOrders table to schema.ts
+    - Add userPreferences table to schema.ts
+    - Add kanbanStatus and scheduledTime fields to tasks table
+    - Run `bun db:generate` and `bun db:migrate`
+    - _Requirements: 4.1, 23.2, 22.1_
+
+- [ ] 2. Timer Utilities
+  - [ ] 2.1 Implement timer utility functions
+    - Create timer.ts with calculateBreakDuration(), formatTime(), parseTime()
+    - Implement timer state machine logic (idle, running, paused, completed)
+    - _Requirements: 2.4, 2.5, 2.6_
+  - [ ] 2.2 Write property tests for timer utilities
+    - **Property 1: Timer State Preservation**
+    - **Property 2: Timer Reset Restoration**
+    - **Property 3: Break Duration Calculation**
+    - **Validates: Requirements 2.4, 2.5, 2.6**
+
+- [ ] 3. Focus Service Implementation
+  - [ ] 3.1 Implement Focus service
+    - Create focus.service.ts with startSession(), endSession()
+    - Implement getSessionsByTask(), getTotalFocusTime()
+    - Implement getSessionsByDateRange() for analytics
+    - _Requirements: 4.1, 4.2, 4.3_
+  - [ ] 3.2 Write property tests for Focus service
+    - **Property 4: Focus Session Recording**
+    - **Property 5: Focus Time Aggregation**
+    - **Validates: Requirements 4.1, 4.2, 4.3**
+
+- [ ] 4. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 5. Analytics Utilities
+  - [ ] 5.1 Implement analytics utility functions
+    - Create analytics.ts with calculateCompletionRate(), calculateStreak()
+    - Implement groupByTimePeriod(), groupByPriority(), groupByLabel()
+    - Implement filterByDateRange()
+    - _Requirements: 5.2, 5.3, 5.4, 6.2, 6.3, 6.4, 7.2_
+  - [ ] 5.2 Write property tests for analytics utilities
+    - **Property 6: Completion Rate Calculation**
+    - **Property 7: Streak Calculation**
+    - **Property 8: Time Tracking Aggregation**
+    - **Property 9: Chart Data Grouping**
+    - **Property 10: Date Range Filtering**
+    - **Validates: Requirements 5.2, 5.3, 5.4, 6.2, 6.3, 6.4, 7.2**
+
+- [ ] 6. Analytics Service Implementation
+  - [ ] 6.1 Implement Analytics service
+    - Create analytics.service.ts with getMetrics()
+    - Implement getCompletionData(), getPriorityDistribution(), getLabelDistribution()
+    - Implement calculateStreak() using task completion dates
+    - _Requirements: 5.1, 5.2, 5.3, 5.4, 6.1, 6.2, 6.3, 6.4_
+
+- [ ] 7. Calendar Utilities
+  - [ ] 7.1 Implement calendar utility functions
+    - Create calendar.ts with getMonthDays(), getWeekDays()
+    - Implement calculateHeatMapIntensity()
+    - Implement groupTasksByDate()
+    - _Requirements: 8.1, 11.1, 11.2, 11.3_
+  - [ ] 7.2 Write property tests for calendar utilities
+    - **Property 11: Calendar Task Placement**
+    - **Property 13: Heat Map Intensity Correlation**
+    - **Property 14: Heat Map Tooltip Data**
+    - **Validates: Requirements 8.1, 8.2, 11.1, 11.2, 11.3**
+
+- [ ] 8. Calendar Service Implementation
+  - [ ] 8.1 Implement Calendar service
+    - Create calendar.service.ts with getMonthData(), getWeekData()
+    - Implement getHeatMapData()
+    - Implement rescheduleTask() for drag-drop
+    - _Requirements: 8.1, 9.1, 10.1, 10.2, 10.3, 11.1_
+  - [ ] 8.2 Write property tests for Calendar service
+    - **Property 12: Calendar Drag-Drop Scheduling**
+    - **Validates: Requirements 10.1, 10.2, 10.3**
+
+- [ ] 9. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 10. Command Service Implementation
+  - [ ] 10.1 Implement Command service
+    - Create command.service.ts with getCommands() returning all available commands
+    - Implement searchCommands() using Fuse.js for fuzzy matching
+    - Implement executeCommand() to run command actions
+    - Implement getRecentTasks() for task search results
+    - _Requirements: 14.1, 15.1, 15.2, 15.3, 16.1, 16.2, 16.3, 16.4, 16.5_
+  - [ ] 10.2 Write property tests for Command service
+    - **Property 16: Command Palette Fuzzy Search**
+    - **Property 17: Command Result Categorization**
+    - **Property 18: Command Match Highlighting**
+    - **Property 19: Command Keyboard Navigation**
+    - **Property 20: Command Execution**
+    - **Property 21: Navigation Command Routing**
+    - **Validates: Requirements 15.1, 15.2, 15.3, 16.2, 16.4, 16.5**
+
+- [ ] 11. Timeline Utilities
+  - [ ] 11.1 Implement timeline utility functions
+    - Create timeline.ts with calculateTimeBlockPosition()
+    - Implement detectConflicts() for overlapping tasks
+    - Implement layoutConflictingBlocks() for stacking/side-by-side
+    - Implement calculateNowIndicatorPosition()
+    - _Requirements: 17.2, 17.4, 18.1, 18.2_
+  - [ ] 11.2 Write property tests for timeline utilities
+    - **Property 22: Timeline Task Positioning**
+    - **Property 23: Timeline Priority Coloring**
+    - **Property 24: Timeline Now Indicator**
+    - **Property 25: Timeline Conflict Detection**
+    - **Property 26: Timeline Conflict Layout**
+    - **Validates: Requirements 17.2, 17.3, 17.4, 18.1, 18.2**
+
+- [ ] 12. Timeline Service Implementation
+  - [ ] 12.1 Implement timeline drag/resize operations
+    - Extend calendar.service.ts with rescheduleTaskTime()
+    - Implement updateTaskEstimate() for resize
+    - _Requirements: 19.2, 19.3, 19.4_
+  - [ ] 12.2 Write property tests for timeline operations
+    - **Property 27: Timeline Drag Rescheduling**
+    - **Property 28: Timeline Resize Estimate Update**
+    - **Validates: Requirements 19.2, 19.3**
+
+- [ ] 13. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 14. Onboarding Service Implementation
+  - [ ] 14.1 Implement Onboarding service
+    - Create onboarding.service.ts with getState(), setStep()
+    - Implement complete(), skip(), reset()
+    - Use userPreferences table for persistence
+    - _Requirements: 20.1, 21.1, 22.1, 22.2, 22.3, 22.4_
+  - [ ] 14.2 Write property tests for Onboarding service
+    - **Property 29: Onboarding State Persistence**
+    - **Property 30: Onboarding Skip Behavior**
+    - **Validates: Requirements 22.1, 22.3**
+
+- [ ] 15. Kanban Service Implementation
+  - [ ] 15.1 Implement Kanban service
+    - Create kanban.service.ts with getColumns()
+    - Implement updateTaskStatus() for drag between columns
+    - Implement reorderTasks() for within-column ordering
+    - Implement getTasksByStatus() with filtering
+    - _Requirements: 23.1, 23.2, 24.1, 24.4, 25.1, 25.3, 26.1, 26.2, 26.3_
+  - [ ] 15.2 Write property tests for Kanban service
+    - **Property 31: Kanban Task Status Placement**
+    - **Property 32: Kanban Card Information**
+    - **Property 33: Kanban Drag Status Update**
+    - **Property 34: Kanban Reorder Persistence**
+    - **Property 35: Kanban Filter Application**
+    - **Property 36: Kanban Filter Clear**
+    - **Validates: Requirements 23.2, 23.3, 24.1, 24.4, 25.1, 25.3, 26.2, 26.3**
+
+- [ ] 16. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 17. API Routes
+  - [ ] 17.1 Implement Focus API routes
+    - POST /api/focus/sessions - start session
+    - PUT /api/focus/sessions/[id] - end session
+    - GET /api/focus/sessions?taskId= - get sessions by task
+    - _Requirements: 4.1, 4.2_
+  - [ ] 17.2 Implement Dashboard API routes
+    - GET /api/dashboard/metrics?start=&end= - get metrics
+    - GET /api/dashboard/completion?start=&end=&groupBy= - completion data
+    - GET /api/dashboard/distribution/priority - priority distribution
+    - GET /api/dashboard/distribution/labels - label distribution
+    - _Requirements: 5.1, 6.1_
+  - [ ] 17.3 Implement Calendar API routes
+    - GET /api/calendar/month?year=&month= - month data
+    - GET /api/calendar/week?start= - week data
+    - GET /api/calendar/heatmap?year=&month= - heat map data
+    - _Requirements: 8.1, 9.1, 11.1_
+  - [ ] 17.4 Implement Kanban API routes
+    - GET /api/kanban/columns - get all columns with tasks
+    - PUT /api/kanban/tasks/[id]/status - update status
+    - PUT /api/kanban/tasks/reorder - reorder tasks
+    - _Requirements: 23.1, 24.1, 25.1_
+
+- [ ] 18. React Hooks
+  - [ ] 18.1 Implement feature hooks
+    - Create useFocus.ts with timer state management
+    - Create useAnalytics.ts with React Query for dashboard data
+    - Create useCalendar.ts with month/week data fetching
+    - Create useCommandPalette.ts with keyboard handling
+    - Create useOnboarding.ts with state management
+    - Create useKanban.ts with drag-drop state
+    - _Requirements: All features_
+
+- [ ] 19. Focus Mode Components
+  - [ ] 19.1 Implement PomodoroTimer component
+    - Circular progress ring with SVG animation
+    - Play/pause/reset controls
+    - Session type indicator (work/break)
+    - _Requirements: 2.1, 2.2, 2.3, 2.5, 2.6_
+  - [ ] 19.2 Implement AmbientSounds component
+    - Sound selector with icons
+    - Volume slider
+    - use-sound integration for audio playback
+    - _Requirements: 3.1, 3.2, 3.3, 3.4_
+  - [ ] 19.3 Implement FocusView component
+    - Full-screen layout with task display
+    - Timer and ambient sounds integration
+    - Exit button and Escape key handler
+    - Framer Motion enter/exit animations
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [ ] 19.4 Create Focus page route
+    - Create app/focus/[taskId]/page.tsx
+    - Fetch task data and render FocusView
+    - _Requirements: 1.1_
+
+- [ ] 20. Dashboard Components
+  - [ ] 20.1 Implement MetricsCards component
+    - Cards for completion rate, streak, time tracked
+    - Animated number transitions
+    - _Requirements: 5.1_
+  - [ ] 20.2 Implement chart components
+    - CompletionChart with Recharts line/bar chart
+    - PriorityChart with Recharts pie/donut chart
+    - LabelChart with Recharts bar chart
+    - Tooltip integration for hover details
+    - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+  - [ ] 20.3 Implement DateRangePicker component
+    - Preset buttons (Today, This Week, etc.)
+    - Custom date range with calendar popover
+    - _Requirements: 7.1, 7.2, 7.3_
+  - [ ] 20.4 Implement DashboardView and page
+    - Layout with metrics and charts
+    - Date range state management
+    - Create app/dashboard/page.tsx
+    - _Requirements: 5.1, 6.1, 7.1_
+
+- [ ] 21. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 22. Calendar Components
+  - [ ] 22.1 Implement MonthView component
+    - Month grid with day cells
+    - Task indicators with priority colors
+    - Navigation between months
+    - _Requirements: 8.1, 8.2, 8.4_
+  - [ ] 22.2 Implement WeekView component
+    - 7-day grid with time slots
+    - Time blocks for scheduled tasks
+    - Navigation between weeks
+    - _Requirements: 9.1, 9.2, 9.3_
+  - [ ] 22.3 Implement DayCell component
+    - Task count and indicators
+    - Click to expand day details
+    - Drop target for drag-drop
+    - _Requirements: 8.2, 8.3_
+  - [ ] 22.4 Implement CalendarHeatMap component
+    - Color-coded intensity overlay
+    - Hover tooltips with stats
+    - _Requirements: 11.1, 11.2, 11.3_
+  - [ ] 22.5 Implement drag-drop for calendar
+    - @dnd-kit integration for task dragging
+    - Visual preview during drag
+    - Date/time update on drop
+    - _Requirements: 10.1, 10.2, 10.3, 10.4_
+  - [ ] 22.6 Implement CalendarView and page
+    - View mode toggle (month/week)
+    - Create app/calendar/page.tsx
+    - _Requirements: 8.1, 9.1_
+
+- [ ] 23. Quick Capture Components
+  - [ ] 23.1 Implement QuickCaptureButton component
+    - Floating action button with Framer Motion
+    - Position in bottom-right corner
+    - _Requirements: 12.1_
+  - [ ] 23.2 Implement QuickCaptureForm component
+    - Expandable form with animation
+    - Natural language input with preview
+    - Auto-focus on open
+    - Enter to submit, Escape to cancel
+    - Click outside to close
+    - _Requirements: 12.2, 12.3, 12.4, 13.1, 13.2, 13.3, 13.4_
+  - [ ] 23.3 Add QuickCapture to root layout
+    - Render on all pages
+    - _Requirements: 12.1_
+
+- [ ] 24. Command Palette Components
+  - [ ] 24.1 Implement CommandPalette component
+    - Modal with cmdk integration
+    - Keyboard shortcut listener (⌘K / Ctrl+K)
+    - Search input with auto-focus
+    - _Requirements: 14.1, 14.2, 14.3, 14.4_
+  - [ ] 24.2 Implement CommandList component
+    - Grouped results by category
+    - Keyboard navigation (arrow keys)
+    - Enter to execute
+    - _Requirements: 15.2, 16.4, 16.5_
+  - [ ] 24.3 Implement CommandItem component
+    - Label with match highlighting
+    - Icon and shortcut display
+    - _Requirements: 15.3, 16.1_
+  - [ ] 24.4 Add CommandPalette to root layout
+    - Global keyboard listener
+    - _Requirements: 14.1_
+
+- [ ] 25. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 26. Timeline Components
+  - [ ] 26.1 Implement TimelineView component
+    - Horizontal timeline from 6 AM to 11 PM
+    - Hour markers and grid lines
+    - Create app/timeline/page.tsx
+    - _Requirements: 17.1_
+  - [ ] 26.2 Implement TimeBlock component
+    - Positioned and sized based on time/duration
+    - Priority-based coloring
+    - Task name display
+    - Click to open task detail
+    - _Requirements: 17.2, 17.3, 19.1_
+  - [ ] 26.3 Implement NowIndicator component
+    - Vertical line at current time
+    - Auto-update position
+    - _Requirements: 17.4_
+  - [ ] 26.4 Implement ConflictIndicator component
+    - Visual highlight for overlapping tasks
+    - Click to show conflict details
+    - _Requirements: 18.1, 18.2, 18.3_
+  - [ ] 26.5 Implement timeline drag and resize
+    - @dnd-kit for dragging time blocks
+    - Resize handles for duration adjustment
+    - _Requirements: 19.2, 19.3, 19.4_
+
+- [ ] 27. Onboarding Components
+  - [ ] 27.1 Implement WelcomeScreen component
+    - App name and tagline
+    - Animated illustration
+    - "Get Started" button
+    - _Requirements: 20.1, 20.2, 20.3_
+  - [ ] 27.2 Implement FeatureHighlight component
+    - Card with icon, title, description
+    - Navigation dots
+    - Next/Previous buttons
+    - _Requirements: 21.1, 21.2, 21.3_
+  - [ ] 27.3 Implement OnboardingFlow component
+    - Step management
+    - Skip button
+    - Complete button on final step
+    - Framer Motion transitions
+    - _Requirements: 21.4, 22.1, 22.2, 22.4_
+  - [ ] 27.4 Add onboarding check to root layout
+    - Check onboarding state on app load
+    - Show OnboardingFlow for new users
+    - _Requirements: 20.1, 22.3_
+
+- [ ] 28. Kanban Components
+  - [ ] 28.1 Implement KanbanColumn component
+    - Column header with title and count
+    - Scrollable task list
+    - Drop zone for drag-drop
+    - _Requirements: 23.1, 23.4_
+  - [ ] 28.2 Implement KanbanCard component
+    - Task name, priority indicator
+    - Due date and labels
+    - Draggable with @dnd-kit
+    - _Requirements: 23.3_
+  - [ ] 28.3 Implement KanbanFilters component
+    - List, label, and priority filters
+    - Clear filters button
+    - _Requirements: 26.1_
+  - [ ] 28.4 Implement KanbanBoard component
+    - Three columns layout (To Do, In Progress, Done)
+    - @dnd-kit DndContext for drag-drop
+    - Filter state management
+    - Create app/kanban/page.tsx
+    - _Requirements: 23.1, 23.2, 24.1, 24.2, 24.3, 24.4, 25.1, 25.2, 26.2, 26.3_
+
+- [ ] 29. Navigation Updates
+  - [ ] 29.1 Update Sidebar with new views
+    - Add Dashboard, Calendar, Timeline, Kanban links
+    - Add Focus Mode entry point
+    - _Requirements: All features_
+  - [ ] 29.2 Update command palette commands
+    - Add navigation commands for new views
+    - Add "Start Focus Mode" action
+    - _Requirements: 16.1, 16.2_
+
+- [ ] 30. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

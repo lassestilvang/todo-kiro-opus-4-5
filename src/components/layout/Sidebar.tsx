@@ -14,29 +14,27 @@ import {
   ChevronRight,
   Plus,
   AlertCircle,
+  Sparkles,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { List, Label } from '@/types';
 
-/**
- * Sidebar animation variants for Framer Motion
- * Requirements: 21.1
- */
 const sidebarVariants: Variants = {
   expanded: { 
-    width: 256,
+    width: 280,
     transition: { 
-      duration: 0.2, 
+      duration: 0.3, 
       ease: [0.4, 0, 0.2, 1],
       when: 'beforeChildren',
     },
   },
   collapsed: { 
-    width: 64,
+    width: 72,
     transition: { 
-      duration: 0.2, 
+      duration: 0.3, 
       ease: [0.4, 0, 0.2, 1],
       when: 'afterChildren',
     },
@@ -46,22 +44,25 @@ const sidebarVariants: Variants = {
 const contentVariants: Variants = {
   expanded: { 
     opacity: 1,
-    transition: { duration: 0.15, delay: 0.05 },
+    x: 0,
+    transition: { duration: 0.2, delay: 0.1 },
   },
   collapsed: { 
     opacity: 0,
-    transition: { duration: 0.1 },
+    x: -10,
+    transition: { duration: 0.15 },
   },
 };
 
 const navItemVariants: Variants = {
-  hidden: { opacity: 0, x: -10 },
+  hidden: { opacity: 0, x: -20 },
   visible: (i: number) => ({
     opacity: 1,
     x: 0,
     transition: {
-      delay: i * 0.03,
-      duration: 0.2,
+      delay: i * 0.05,
+      duration: 0.3,
+      ease: [0.4, 0, 0.2, 1],
     },
   }),
 };
@@ -74,7 +75,6 @@ interface SidebarProps {
   onToggleCollapse?: () => void;
   onCreateList?: () => void;
   onCreateLabel?: () => void;
-  /** Mobile mode - shows close button instead of collapse */
   isMobile?: boolean;
 }
 
@@ -88,11 +88,22 @@ interface NavItemProps {
   color?: string;
   emoji?: string;
   index?: number;
-  /** Larger touch targets for mobile */
   isMobile?: boolean;
+  gradient?: boolean;
 }
 
-function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, index = 0, isMobile = false }: NavItemProps) {
+function NavItem({ 
+  href, 
+  icon, 
+  label, 
+  badge, 
+  isActive, 
+  collapsed, 
+  emoji, 
+  index = 0, 
+  isMobile = false,
+  gradient = false,
+}: NavItemProps): React.ReactElement {
   return (
     <motion.div
       custom={index}
@@ -102,21 +113,41 @@ function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, 
     >
       <Link
         href={href}
+        data-active={isActive}
         className={cn(
-          'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
-          'hover:bg-accent hover:text-accent-foreground',
-          'active:bg-accent/80', // Touch feedback
-          isActive && 'bg-accent text-accent-foreground font-medium',
+          'sidebar-nav-item group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium',
+          'transition-all duration-200',
           collapsed && 'justify-center px-2',
-          // Mobile: larger touch targets (min 44px height for accessibility)
-          isMobile && 'py-3 min-h-[44px]'
+          isMobile && 'py-3.5 min-h-[52px]',
+          isActive && 'text-foreground',
+          !isActive && 'text-muted-foreground hover:text-foreground'
         )}
       >
-        {emoji ? (
-          <span className={cn('text-base', isMobile && 'text-lg')}>{emoji}</span>
-        ) : (
-          <span className={cn('shrink-0', color && `text-[${color}]`)}>{icon}</span>
+        {/* Active indicator glow */}
+        {isActive && (
+          <motion.div
+            layoutId="activeGlow"
+            className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/10 to-accent/10"
+            initial={false}
+            transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+          />
         )}
+        
+        {/* Icon */}
+        <span className={cn(
+          'relative z-10 shrink-0 transition-transform duration-200',
+          'group-hover:scale-110',
+          gradient && 'gradient-text',
+          isMobile && 'text-lg'
+        )}>
+          {emoji ? (
+            <span className={cn('text-lg', isMobile && 'text-xl')}>{emoji}</span>
+          ) : (
+            icon
+          )}
+        </span>
+        
+        {/* Label */}
         <AnimatePresence mode="wait">
           {!collapsed && (
             <motion.span
@@ -125,26 +156,40 @@ function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, 
               initial="collapsed"
               animate="expanded"
               exit="collapsed"
-              className={cn('flex-1 truncate', isMobile && 'text-base')}
+              className={cn(
+                'relative z-10 flex-1 truncate',
+                isMobile && 'text-base'
+              )}
             >
               {label}
             </motion.span>
           )}
         </AnimatePresence>
+        
+        {/* Badge */}
         {!collapsed && badge !== undefined && badge > 0 && (
           <motion.div
             variants={contentVariants}
             initial="collapsed"
             animate="expanded"
             exit="collapsed"
+            className="relative z-10"
           >
-            <Badge variant="secondary" className="ml-auto h-5 min-w-5 px-1.5 text-xs">
+            <Badge 
+              variant="secondary" 
+              className={cn(
+                'ml-auto h-5 min-w-5 px-1.5 text-xs font-semibold',
+                'bg-primary/10 text-primary border-0'
+              )}
+            >
               {badge}
             </Badge>
           </motion.div>
         )}
+        
+        {/* Collapsed badge */}
         {collapsed && badge !== undefined && badge > 0 && (
-          <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] text-destructive-foreground">
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground shadow-lg">
             {badge > 9 ? '9+' : badge}
           </span>
         )}
@@ -153,7 +198,15 @@ function NavItem({ href, icon, label, badge, isActive, collapsed, color, emoji, 
   );
 }
 
-function SectionHeader({ title, collapsed, onAdd }: { title: string; collapsed?: boolean; onAdd?: () => void }) {
+function SectionHeader({ 
+  title, 
+  collapsed, 
+  onAdd 
+}: { 
+  title: string; 
+  collapsed?: boolean; 
+  onAdd?: () => void;
+}): React.ReactElement | null {
   return (
     <AnimatePresence mode="wait">
       {!collapsed && (
@@ -163,19 +216,19 @@ function SectionHeader({ title, collapsed, onAdd }: { title: string; collapsed?:
           initial="collapsed"
           animate="expanded"
           exit="collapsed"
-          className="flex items-center justify-between px-3 py-2"
+          className="flex items-center justify-between px-3 py-2 mt-2"
         >
-          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
             {title}
           </span>
           {onAdd && (
             <Button
               variant="ghost"
               size="icon"
-              className="h-5 w-5"
+              className="h-6 w-6 rounded-lg hover:bg-primary/10 hover:text-primary transition-colors"
               onClick={onAdd}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3.5 w-3.5" />
             </Button>
           )}
         </motion.div>
@@ -184,13 +237,6 @@ function SectionHeader({ title, collapsed, onAdd }: { title: string; collapsed?:
   );
 }
 
-/**
- * Sidebar Component
- * Animated sidebar with collapsible navigation using Framer Motion.
- * Supports both desktop (collapsible) and mobile (overlay) modes.
- * 
- * Requirements: 18.1, 18.2, 18.3, 18.4, 20.2, 20.3, 21.1
- */
 export function Sidebar({
   lists,
   labels,
@@ -200,17 +246,16 @@ export function Sidebar({
   onCreateList,
   onCreateLabel,
   isMobile = false,
-}: SidebarProps) {
+}: SidebarProps): React.ReactElement {
   const pathname = usePathname();
 
   const views = [
-    { href: '/today', icon: <Calendar className="h-4 w-4" />, label: 'Today' },
-    { href: '/next-7-days', icon: <CalendarDays className="h-4 w-4" />, label: 'Next 7 Days' },
-    { href: '/upcoming', icon: <CalendarRange className="h-4 w-4" />, label: 'Upcoming' },
-    { href: '/all', icon: <ListTodo className="h-4 w-4" />, label: 'All' },
+    { href: '/today', icon: <Calendar className="h-[18px] w-[18px]" />, label: 'Today', gradient: true },
+    { href: '/next-7-days', icon: <CalendarDays className="h-[18px] w-[18px]" />, label: 'Next 7 Days' },
+    { href: '/upcoming', icon: <CalendarRange className="h-[18px] w-[18px]" />, label: 'Upcoming' },
+    { href: '/all', icon: <ListTodo className="h-[18px] w-[18px]" />, label: 'All Tasks' },
   ];
 
-  // In mobile mode, always show expanded sidebar
   const isCollapsed = isMobile ? false : collapsed;
 
   return (
@@ -219,31 +264,38 @@ export function Sidebar({
       variants={sidebarVariants}
       animate={isCollapsed ? 'collapsed' : 'expanded'}
       className={cn(
-        'flex h-full flex-col border-r bg-sidebar text-sidebar-foreground',
+        'flex h-full flex-col',
+        'glass-card border-r-0 rounded-none',
         'relative overflow-hidden',
-        // Mobile-specific styles
-        isMobile && 'w-64 shadow-xl'
+        isMobile && 'w-72 shadow-2xl rounded-r-3xl'
       )}
     >
+      {/* Ambient gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-accent/5 pointer-events-none" />
+      
       {/* Header */}
       <div className={cn(
-        'flex h-14 items-center border-b px-4',
+        'relative flex h-16 items-center border-b border-border/50 px-4',
         isCollapsed && 'justify-center px-2'
       )}>
         <AnimatePresence mode="wait">
           {!isCollapsed && (
-            <motion.h1
+            <motion.div
               key="title"
               variants={contentVariants}
               initial="collapsed"
               animate="expanded"
               exit="collapsed"
-              className="text-lg font-semibold"
+              className="flex items-center gap-2"
             >
-              Tasks
-            </motion.h1>
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent shadow-lg">
+                <Sparkles className="h-4 w-4 text-white" />
+              </div>
+              <span className="text-lg font-bold gradient-text">Tasks</span>
+            </motion.div>
           )}
         </AnimatePresence>
+        
         {onToggleCollapse && (
           <motion.div
             animate={{ marginLeft: isCollapsed ? 0 : 'auto' }}
@@ -253,17 +305,20 @@ export function Sidebar({
               variant="ghost"
               size="icon"
               className={cn(
-                'h-8 w-8',
-                // Larger touch target on mobile
+                'h-8 w-8 rounded-xl hover:bg-primary/10 transition-colors',
                 isMobile && 'h-10 w-10'
               )}
               onClick={onToggleCollapse}
             >
               <motion.div
-                animate={{ rotate: isMobile ? 0 : (isCollapsed ? 0 : 180) }}
-                transition={{ duration: 0.2 }}
+                animate={{ rotate: isMobile ? 180 : (isCollapsed ? 0 : 180) }}
+                transition={{ duration: 0.3 }}
               >
-                <ChevronRight className={cn('h-4 w-4', isMobile && 'h-5 w-5')} />
+                {isMobile ? (
+                  <X className="h-5 w-5" />
+                ) : (
+                  <ChevronRight className={cn('h-4 w-4', isMobile && 'h-5 w-5')} />
+                )}
               </motion.div>
             </Button>
           </motion.div>
@@ -272,12 +327,11 @@ export function Sidebar({
 
       {/* Navigation */}
       <nav className={cn(
-        'flex-1 overflow-y-auto p-2',
-        // Better touch scrolling on mobile
+        'relative flex-1 overflow-y-auto p-3 space-y-1',
         isMobile && 'overscroll-contain'
       )}>
         {/* Views Section */}
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           <SectionHeader title="Views" collapsed={isCollapsed} />
           {views.map((view, index) => (
             <NavItem
@@ -289,6 +343,7 @@ export function Sidebar({
               collapsed={isCollapsed}
               index={index}
               isMobile={isMobile}
+              gradient={view.gradient}
             />
           ))}
         </div>
@@ -300,11 +355,11 @@ export function Sidebar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-2 space-y-1"
+              className="pt-1"
             >
               <NavItem
                 href="/overdue"
-                icon={<AlertCircle className="h-4 w-4 text-destructive" />}
+                icon={<AlertCircle className="h-[18px] w-[18px] text-destructive" />}
                 label="Overdue"
                 badge={overdueCount}
                 isActive={pathname === '/overdue'}
@@ -317,17 +372,16 @@ export function Sidebar({
         </AnimatePresence>
 
         {/* Lists Section */}
-        <div className="mt-6 space-y-1">
+        <div className="pt-4 space-y-0.5">
           <SectionHeader title="Lists" collapsed={isCollapsed} onAdd={onCreateList} />
           {lists.map((list, index) => (
             <NavItem
               key={list.id}
               href={`/list/${list.id}`}
-              icon={list.isInbox ? <Inbox className="h-4 w-4" /> : <ListTodo className="h-4 w-4" />}
+              icon={list.isInbox ? <Inbox className="h-[18px] w-[18px]" /> : <ListTodo className="h-[18px] w-[18px]" />}
               label={list.name}
               isActive={pathname === `/list/${list.id}`}
               collapsed={isCollapsed}
-              color={list.color}
               emoji={list.emoji}
               index={index}
               isMobile={isMobile}
@@ -336,13 +390,13 @@ export function Sidebar({
         </div>
 
         {/* Labels Section */}
-        <div className="mt-6 space-y-1">
+        <div className="pt-4 space-y-0.5">
           <SectionHeader title="Labels" collapsed={isCollapsed} onAdd={onCreateLabel} />
           {labels.map((label, index) => (
             <NavItem
               key={label.id}
               href={`/label/${label.id}`}
-              icon={label.icon ? <span>{label.icon}</span> : <Tag className="h-4 w-4" />}
+              icon={label.icon ? <span>{label.icon}</span> : <Tag className="h-[18px] w-[18px]" />}
               label={label.name}
               isActive={pathname === `/label/${label.id}`}
               collapsed={isCollapsed}
@@ -352,6 +406,9 @@ export function Sidebar({
           ))}
         </div>
       </nav>
+      
+      {/* Bottom gradient fade */}
+      <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-sidebar to-transparent pointer-events-none" />
     </motion.aside>
   );
 }
